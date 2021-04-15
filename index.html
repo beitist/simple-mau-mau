@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,45 +11,41 @@
 
   <body>
     <header>
-      <h1>Mau Mau - das Kartenspiel</h1>
+      <h1>Mau Mau - the card game</h1>
       <h4 id="header-version"></h4>
     </header>
 
     <nav>
-      <button id="button-neues-spiel">Neues Spiel</button>
-      <button id="button-undo">Spielzug zurücknehmen</button>
-      <button id="button-bestenliste">Bestenliste</button>
+      <button id="button-new-game">New game</button>
+      <button id="button-undo">Undo last move</button>
+      <button id="button-best-games">Top Ten</button>
     </nav>
 
     <main>
-      <div id="linker-spieler">
-        <p id="linker-spieler-karten">Karten auf Hand</p>
+      <div id="left-player">
+        <p id="left-player-cards">Cards on hand</p>
+        <p id="left-player-name"></p>
       </div>
 
-      <div id="ablage">
-        <div id="zugstabel">
-
-        </div>
-        <div id="ablagestabel">
-
-        </div>
+      <div id="piles">
+        <div id="draw-pile"></div>
+        <div id="discard-pile"></div>
       </div>
 
-      <div id="rechter-spieler">
-        <p id="rechter-spieler-karten">Karten auf Hand</p>
+      <div id="right-player">
+        <p id="right-player-cards">Cards on hand</p>
+        <p id="right-player-name"></p>
       </div>
 
-      <div id="spieler">
-        <div id="spieler-handkarten">
-
-        </div>
-        
-        <div id="spieler-ansagen">
+      <div id="player">
+        <div id="player-name"></div>
+        <div id="player-cards"></div>
+        <div id="player-commands">
           <button>Mau</button>
-          <button>Ich geb' auf.</button>
+          <button>I give up.</button>
         </div>
       </div>
       
     </main>
   </body>
-</html>
+</html> 
