@@ -1,20 +1,20 @@
-const maumauVersion = 'dev 0.02';
-const pathToCardImages = '/img/png/';
-const totalNumberOfPlayers = 3;
-const backOfCardImage = '/img/png/red_back.png';
+const MAU_MAU_VERSION = 'dev 0.02';
+const PATH_TO_CARD_IMAGES = '/img/png/';
+const BACK_OF_CARD_IMAGE = '/img/png/red_back.png';
+
+const CARD_COLORS = ['diamond',
+'heart',
+'spades',
+'club'];
+
+const CARD_VALUES = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 
 const newGameButton = document.getElementById("button-new-game");
 const undoButton = document.getElementById("button-undo");
 const topTenButton = document.getElementById("button-top-ten");
-
 const versionElement = document.getElementById("header-version");
 
-const cardColors = ['diamond',
-                  'heart',
-                  'spades',
-                  'club'];
-
-const cardValues = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+const totalNumberOfPlayers = 3;
 
 let gameGoesClockwise = true;
 let drawPile = [];
@@ -25,8 +25,8 @@ const initCardsToDiscardPile = () => {
   if (discardPile.length > 0) {
     discardPile = [];
   }
-  for (const color of cardColors) {
-    for (const cardValue of cardValues) {
+  for (const color of CARD_COLORS) {
+    for (const cardValue of CARD_VALUES) {
       const card = makeCardObject(color, cardValue);
       discardPile.push(card); 
     }
@@ -35,7 +35,7 @@ const initCardsToDiscardPile = () => {
 }
 
 const initStartScreen = () => {
-  versionElement.innerText = "Version: " + maumauVersion;
+  versionElement.innerText = "Version: " + MAU_MAU_VERSION;
   newGameButton.addEventListener('click', startNewGame);
 }
 
@@ -50,7 +50,7 @@ const makeCardObject = function(color, cardValue) {
   }
 
   const cardImageFile = cardValue + color[0].toUpperCase() + '.png';
-  const cardImageFileAndPath = pathToCardImages + cardImageFile;
+  const cardImageFileAndPath = PATH_TO_CARD_IMAGES + cardImageFile;
 
   const card = {
     value : cardValue,
