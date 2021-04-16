@@ -36,6 +36,7 @@ const initCardsToDiscardPile = () => {
 
 const initStartScreen = () => {
   versionElement.innerText = "Version: " + MAU_MAU_VERSION;
+  
   newGameButton.addEventListener('click', startNewGame);
 }
 
