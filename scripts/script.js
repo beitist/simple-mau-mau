@@ -1,5 +1,6 @@
-const MAU_MAU_VERSION = 'dev 0.04';
-const LOG_DETAILS = true;
+const MAU_MAU_VERSION = 'dev 0.05';
+const LOG_DETAILS = false;
+const DEBUG_GAME_LOGIC = false;
 
 const PATH_TO_CARD_IMAGES = 'img/png/';
 const BACK_OF_CARD_IMAGE = 'img/png/red_back.png';
@@ -23,8 +24,8 @@ const discardPileNode = document.getElementById("discard-pile");
 const drawPileNode = document.getElementById("draw-pile");
 
 // totalNumberOfPlayers wird später variabel gesetzt (ab V 1.1)!
-let totalNumberOfPlayers = 4;
-let cardsPerPlayer = 6;
+let totalNumberOfPlayers = 3;
+let cardsPerPlayer = 5;
 
 let gameGoesClockwise = true;
 
@@ -155,10 +156,17 @@ const renderPlayerCards = () => {
         playerCardsNode.innerHTML += '<img src="' + card.imageSrc + '" width="50px">';
       });
     } else {
-      currentPlayerNode = document.getElementById('player' + i + '-cards');
-      table[i].forEach(function(card) {
-        currentPlayerNode.innerHTML += '<img src="' + card.imageSrc + '" width="50px">';
-      });
+      if (DEBUG_GAME_LOGIC) {
+        currentPlayerNode = document.getElementById('player' + i + '-cards');
+        table[i].forEach(function(card) {
+          currentPlayerNode.innerHTML += '<img src="' + card.imageSrc + '" width="50px">';
+        });
+      } else {
+        currentPlayerNode = document.getElementById('player' + i + '-cards');
+        table[i].forEach(function(card) {
+          currentPlayerNode.innerHTML += '<img src="' + BACK_OF_CARD_IMAGE + '" width="50px">';
+        });
+      };
     };
   };
 };
