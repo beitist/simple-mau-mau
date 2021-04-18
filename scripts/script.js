@@ -1,8 +1,8 @@
-const MAU_MAU_VERSION = 'dev 0.03';
+const MAU_MAU_VERSION = 'dev 0.04';
 const LOG_DETAILS = true;
 
-const PATH_TO_CARD_IMAGES = '/img/png/';
-const BACK_OF_CARD_IMAGE = '/img/png/red_back.png';
+const PATH_TO_CARD_IMAGES = 'img/png/';
+const BACK_OF_CARD_IMAGE = 'img/png/red_back.png';
 
 const CARD_COLORS = ['diamond',
 'heart',
@@ -23,8 +23,8 @@ const discardPileNode = document.getElementById("discard-pile");
 const drawPileNode = document.getElementById("draw-pile");
 
 // totalNumberOfPlayers wird später variabel gesetzt (ab V 1.1)!
-let totalNumberOfPlayers = 3;
-let cardsPerPlayer = 5;
+let totalNumberOfPlayers = 4;
+let cardsPerPlayer = 6;
 
 let gameGoesClockwise = true;
 
@@ -70,7 +70,16 @@ const logEntry = (logText) => {
 const initStartScreen = () => {
   versionElement.innerText = "Version: " + MAU_MAU_VERSION;
   newGameButton.addEventListener('click', startNewGame);
+}
+
+const startNewGame = () => {
+  table = [];
+  logEntry("StartNewGame clicked");
+  initPlayers();
   initCardsToDiscardPile();
+  discardPile.shuffleCards();
+  dealOutCards();
+  // Stapel aufdecken
 }
 
 const initCardsToDiscardPile = () => {
@@ -86,15 +95,6 @@ const initCardsToDiscardPile = () => {
   };
 };
 
-const startNewGame = () => {
-  table = [];
-  logEntry("StartNewGame clicked");
-  initPlayers();
-  initCardsToDiscardPile();
-  discardPile.shuffleCards();
-  // Karten mischen, Karten austeilen, Stapel aufdecken
-}
-
 const initPlayers = () => {
   opponentsNode.innerHTML = '';
   playerCardsNode.innerHTML = '';
@@ -102,9 +102,9 @@ const initPlayers = () => {
     let hand = [];
     table.push(hand);
     if (i > 0) {
-      opponentsNode.innerHTML += `<div id="player${i}">
-      <p id="player${i}-cards"></p>
-      <p id="player${i}-name">Player ${i}</p>
+      opponentsNode.innerHTML += `<div id="player${i}" class="opponent">
+      <p id="player${i}-cards" class="opponent-cards"></p>
+      <p id="player${i}-name" class="opponent-name">Player ${i}</p>
       </div>`;
     };
   };
@@ -132,6 +132,35 @@ const makeCardObject = function(color, cardValue) {
   };
 
   return card;
+};
+
+const dealOutCards = () => {
+  discardPile.cards.reverse();
+  for (let i = 0; i < cardsPerPlayer; i++) {  
+   for (const hand of table) {
+     logEntry('Last item in discardPile: ' + discardPile.cards[i].value);
+     hand.push(discardPile.cards.pop());
+     logEntry('Hand has ' + hand.length + ' cards.');
+    }
+  }
+  discardPile.cards.reverse();
+  logEntry('DiscardPile now has ' + discardPile.cards.length + ' cards left.');
+  renderPlayerCards();
+}
+
+const renderPlayerCards = () => {
+  for (let i = 0; i < table.length; i++) {
+    if (i == 0) {
+      table[0].forEach(function(card) {
+        playerCardsNode.innerHTML += '<img src="' + card.imageSrc + '" width="50px">';
+      });
+    } else {
+      currentPlayerNode = document.getElementById('player' + i + '-cards');
+      table[i].forEach(function(card) {
+        currentPlayerNode.innerHTML += '<img src="' + card.imageSrc + '" width="50px">';
+      });
+    };
+  };
 };
 
 const drawCardFromStack = (spieler) => {
