@@ -80,7 +80,8 @@ const startNewGame = () => {
   initCardsToDiscardPile();
   discardPile.shuffleCards();
   dealOutCards();
-  // Stapel aufdecken
+  setupPiles();
+  playTheGame();
 }
 
 const initCardsToDiscardPile = () => {
@@ -170,6 +171,15 @@ const renderPlayerCards = () => {
     };
   };
 };
+
+const setupPiles = () => {
+  // Show the first card in the field and the draw pile back side
+  // I think the discard pile also has to become the draw pile!
+}
+
+const playTheGame = () => {
+  // loop while nobody is winner ?
+}
 
 const drawCardFromStack = (spieler) => {
   // an Spieler austeilen
