@@ -22,81 +22,87 @@ let cardsPerPlayer = 5;
 
 let gameGoesClockwise = true;
 
-let deckOfCards = {
-  cards: [],
-  init: function () {
-    const CARD_COLORS = ['diamond', 'heart', 'spades', 'club'];
-    const CARD_VALUES = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-    for (const color of CARD_COLORS) {
-      for (const cardValue of CARD_VALUES) {
-        const card = this.makeCardObject(color, cardValue);
-        this.cards.push(card);
-        logEntry('Created a card with values ' + color + ' ' + cardValue);
+class DeckOfCards {
+  constructor() {
+    cards = [];
+    init = function () {
+      const CARD_COLORS = ['diamond', 'heart', 'spades', 'club'];
+      const CARD_VALUES = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+      for (const color of CARD_COLORS) {
+        for (const cardValue of CARD_VALUES) {
+          const card = this.makeCardObject(color, cardValue);
+          this.cards.push(card);
+          logEntry('Created a card with values ' + color + ' ' + cardValue);
+        }
       }
-    }
-  },
-  makeCardObject: function (color, cardValue) {
-    let cardScoreValue = 0;
-    if (cardValue == 'A') {
-      cardScoreValue = 11;
-    } else if (cardValue > 6 && cardValue < 11) {
-      cardScoreValue = parseInt(cardValue);
-    } else {
-      cardScoreValue = 10;
-    }
-
-    const cardImageFile = cardValue + color[0].toUpperCase() + '.png';
-    const cardImageFileAndPath = PATH_TO_CARD_IMAGES + cardImageFile;
-
-    const card = {
-      value: cardValue,
-      color: color,
-      score: cardScoreValue,
-      imageSrc: cardImageFileAndPath,
     };
-    return card;
-  },
-};
+    makeCardObject = function (color, cardValue) {
+      let cardScoreValue = 0;
+      if (cardValue == 'A') {
+        cardScoreValue = 11;
+      } else if (cardValue > 6 && cardValue < 11) {
+        cardScoreValue = parseInt(cardValue);
+      } else {
+        cardScoreValue = 10;
+      }
 
-let discardPile = {
-  cards: [],
-  renderTopCard: () => {
-    if (discardPile.cards.length > 0) {
-      const indexOfLastCardAdded = discardPile.cards.length - 1;
-      discardPileNode.innerHTML =
-        '<img src="' +
-        discardPile.cards[indexOfLastCardAdded].imageSrc +
-        '" width="100%"></img>';
-    } else {
-      discardPileNode.innerHTML = '';
-    }
-  },
-};
+      const cardImageFile = cardValue + color[0].toUpperCase() + '.png';
+      const cardImageFileAndPath = PATH_TO_CARD_IMAGES + cardImageFile;
 
-let drawPile = {
-  cards: [],
-  renderLastCard: () => {
-    if (this.cards.length > 0) {
-      drawPileNode.style +=
-        'background-image: url("' + BACK_OF_CARD_IMAGE + '")';
-    } else {
-      drawPileNode.style = '';
-    }
-  },
-  shuffleCards: function shuffleCards() {
-    let tempPile = [];
-    drawPile.cards.forEach(function (card) {
-      tempPile.push(card);
-    });
-    drawPile.cards = [];
-    for (let i = tempPile.length; i > 0; i--) {
-      const randomPileIndex = Math.floor(Math.random() * i);
-      drawPile.cards.push(tempPile[randomPileIndex]);
-      tempPile.splice(randomPileIndex, 1);
-    }
-    logEntry('Cards shuffled.');
-  },
-};
+      const card = {
+        value: cardValue,
+        color: color,
+        score: cardScoreValue,
+        imageSrc: cardImageFileAndPath,
+      };
+      return card;
+    };
+  }
+}
+
+class DiscardPile {
+  constructor() {
+    cards = [];
+    renderTopCard = function () {
+      if (this.cards.length > 0) {
+        const indexOfLastCardAdded = this.cards.length - 1;
+        discardPileNode.innerHTML =
+          '<img src="' +
+          discardPile.cards[indexOfLastCardAdded].imageSrc +
+          '" width="100%"></img>';
+      } else {
+        discardPileNode.innerHTML = '';
+      }
+    };
+  }
+}
+
+class DrawPile {
+  constructor() {
+    cards = [];
+    renderLastCard = function () {
+      if (this.cards.length > 0) {
+        drawPileNode.style +=
+          'background-image: url("' + BACK_OF_CARD_IMAGE + '")';
+      } else {
+        drawPileNode.style = '';
+      }
+    };
+    shuffleCards = function () {
+      let tempPile = [];
+      this.cards.forEach(function (card) {
+        tempPile.push(card);
+      });
+      this.cards = [];
+      for (let i = tempPile.length; i > 0; i--) {
+        const randomPileIndex = Math.floor(Math.random() * i);
+        this.cards.push(tempPile[randomPileIndex]);
+        tempPile.splice(randomPileIndex, 1);
+      }
+      logEntry('Cards shuffled.');
+    };
+  }
+}
 
 class Game {
   constructor() {
@@ -105,6 +111,14 @@ class Game {
     this.currentPlayerIndex = 0;
     this.lastPlayerIndex = 0;
     this.nextPlayerIndex = 1;
+    this.deckOfCards = new DeckOfCards();
+    this.shiftCardsToDrawPile = () => {
+      if (this.table.drawPile.cards.length > 0) {
+        this.table.drawPile.cards = [];
+      }
+      this.table.drawPile.cards = this.deckOfCards.cards;
+      this.deckOfCards.cards = [];
+    };
   }
 }
 
@@ -139,20 +153,20 @@ class Table {
         <p id="player${i}-cards" class="opponent-cards"></p>
         <p id="player${i}-name" class="opponent-name">Player ${i}</p>
         </div>`;
-        }
+        };
         this.seats.push(player);
-      }
+      };
       logEntry('Players generated; in total: ' + this.seats.length);
     };
-  }
-}
-
-let table = new Table(totalNumberOfPlayers, cardsPerPlayer);
+    this.drawPile = new DrawPile();
+    this.discardPile = new DiscardPile();
+  };
+};
 
 const logEntry = (logText) => {
   if (LOG_DETAILS) {
     console.log(logText);
-  }
+  };
 };
 
 const initStartScreen = () => {
@@ -162,10 +176,11 @@ const initStartScreen = () => {
 
 const startNewGame = () => {
   logEntry('StartNewGame clicked');
-  table.initPlayers();
-  deckOfCards.init();
-  shiftCardsToDrawPile();
-  drawPile.shuffleCards();
+  let game = new Game();
+  game.table.initPlayers();
+  game.deckOfCards.init();
+  game.shiftCardsToDrawPile();
+  game.table.drawPile.shuffleCards();
   dealOutCards();
   setupGamePiles();
   playTheGame();
