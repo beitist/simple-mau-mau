@@ -98,6 +98,16 @@ let drawPile = {
   },
 };
 
+class Game {
+  constructor() {
+    this.table = new Table(totalNumberOfPlayers, cardsPerPlayer);
+    this.clockwiseTurns = true;
+    this.currentPlayerIndex = 0;
+    this.lastPlayerIndex = 0;
+    this.nextPlayerIndex = 1;
+  }
+}
+
 class Player {
   constructor(isHuman) {
     this.isHuman = isHuman;
@@ -137,6 +147,8 @@ class Table {
   }
 }
 
+let table = new Table(totalNumberOfPlayers, cardsPerPlayer);
+
 const logEntry = (logText) => {
   if (LOG_DETAILS) {
     console.log(logText);
@@ -150,7 +162,6 @@ const initStartScreen = () => {
 
 const startNewGame = () => {
   logEntry('StartNewGame clicked');
-  let table = new Table(totalNumberOfPlayers, cardsPerPlayer);
   table.initPlayers();
   deckOfCards.init();
   shiftCardsToDrawPile();
@@ -167,22 +178,6 @@ const shiftCardsToDrawPile = () => {
   drawPile.cards = deckOfCards.cards;
   deckOfCards.cards = [];
 };
-
-// const initPlayers = () => {
-//   opponentsNode.innerHTML = '';
-//   playerCardsNode.innerHTML = '';
-//   for (let i = 0; i < totalNumberOfPlayers; i++) {
-//     let hand = [];
-//     table.push(hand);
-//     if (i > 0) {
-//       opponentsNode.innerHTML += `<div id="player${i}" class="opponent">
-//       <p id="player${i}-cards" class="opponent-cards"></p>
-//       <p id="player${i}-name" class="opponent-name">Player ${i}</p>
-//       </div>`;
-//     };
-//   };
-// logEntry("Players generated; in total: " + table.length);
-// };
 
 const dealOutCards = () => {
   drawPile.cards.reverse();
