@@ -22,10 +22,18 @@ let cardsPerPlayer = 5;
 
 let gameGoesClockwise = true;
 
+class CardRenderer {
+  constructor() {
+    this.updateNodes = function(from) {
+      if (from == 'drawPile') {}
+    };
+  }
+}
+
 class DeckOfCards {
   constructor() {
-    cards = [];
-    init = function () {
+    this.cards = [];
+    this.init = function () {
       const CARD_COLORS = ['diamond', 'heart', 'spades', 'club'];
       const CARD_VALUES = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
       for (const color of CARD_COLORS) {
@@ -36,7 +44,7 @@ class DeckOfCards {
         }
       }
     };
-    makeCardObject = function (color, cardValue) {
+    this.makeCardObject = function (color, cardValue) {
       let cardScoreValue = 0;
       if (cardValue == 'A') {
         cardScoreValue = 11;
@@ -62,8 +70,8 @@ class DeckOfCards {
 
 class DiscardPile {
   constructor() {
-    cards = [];
-    renderTopCard = function () {
+    this.cards = [];
+    this.renderTopCard = function () {
       if (this.cards.length > 0) {
         const indexOfLastCardAdded = this.cards.length - 1;
         discardPileNode.innerHTML =
@@ -72,15 +80,19 @@ class DiscardPile {
           '" width="100%"></img>';
       } else {
         discardPileNode.innerHTML = '';
-      }
+      };
     };
-  }
-}
+    this.receiveCard = function(card) {
+      this.cards.push(card);
+      discardPileNode.innerHTML = '<img src="' + card.imageSrc + '" width="100%"></img>';
+    };
+  };
+};
 
 class DrawPile {
   constructor() {
-    cards = [];
-    renderLastCard = function () {
+    this.cards = [];
+    this.renderLastCard = function () {
       if (this.cards.length > 0) {
         drawPileNode.style +=
           'background-image: url("' + BACK_OF_CARD_IMAGE + '")';
@@ -88,7 +100,8 @@ class DrawPile {
         drawPileNode.style = '';
       }
     };
-    shuffleCards = function () {
+    this.shuffleCards = function () {
+      logEntry('Shuffling started.');
       let tempPile = [];
       this.cards.forEach(function (card) {
         tempPile.push(card);
@@ -101,8 +114,8 @@ class DrawPile {
       }
       logEntry('Cards shuffled.');
     };
-  }
-}
+  };
+};
 
 class Game {
   constructor() {
@@ -119,13 +132,39 @@ class Game {
       this.table.drawPile.cards = this.deckOfCards.cards;
       this.deckOfCards.cards = [];
     };
+    this.dealOutCards = () => {
+      this.table.drawPile.cards.reverse();
+      for (let i = 0; i < this.table.initialCards; i++) {
+        for (const player of this.table.seats) {
+          logEntry('Last item in drawPile: ' + this.table.drawPile.cards[i].value);
+          player.receiveCard(this.table.drawPile.cards.pop());
+          logEntry('Player has ' + player.cards.length + ' cards.');
+        }
+      }
+      this.table.drawPile.cards.reverse();
+      logEntry('DrawPile now has ' + this.table.drawPile.cards.length + ' cards left.');
+      renderPlayerCards();
+    };
+    this.startTheGame = function() {
+      if (this.drawPile.length > 0) {
+        this.discardPile.receiveCard(this.drawPile.shift());
+      } else {
+        // DiscardPile außer oberster Karte neu mischen
+      };
+    };
   }
 }
 
 class Player {
-  constructor(isHuman) {
+  constructor(isHuman, playerID) {
     this.isHuman = isHuman;
+    this.playerID = parseInt(playerID);
+    this.cardsNodeInnerHTML = '';
     this.cards = [];
+    this.receiveCard = function(receivedCard) {
+      this.cards.push(receivedCard);
+      this.updateNode();
+    };
     this.init = function (isHuman) {
       if (!this.isHuman) {
         opponentsNode.innerHTML += `<div id="player${i}" class="opponent">
@@ -134,8 +173,13 @@ class Player {
       </div>`;
       }
     };
-  }
-}
+    this.updateNode = function() {
+      
+      logEntry('Cards received, Node not yet updated.');
+    };
+    this.cardRenderer = new CardRenderer();
+  };
+};
 
 class Table {
   constructor(totalNumberOfPlayers, cardsPerPlayer) {
@@ -181,7 +225,7 @@ const startNewGame = () => {
   game.deckOfCards.init();
   game.shiftCardsToDrawPile();
   game.table.drawPile.shuffleCards();
-  dealOutCards();
+  game.dealOutCards();
   setupGamePiles();
   playTheGame();
 };
@@ -192,20 +236,6 @@ const shiftCardsToDrawPile = () => {
   }
   drawPile.cards = deckOfCards.cards;
   deckOfCards.cards = [];
-};
-
-const dealOutCards = () => {
-  drawPile.cards.reverse();
-  for (let i = 0; i < cardsPerPlayer; i++) {
-    for (const player of table.seats) {
-      logEntry('Last item in drawPile: ' + drawPile.cards[i].value);
-      player.cards.push(drawPile.cards.pop());
-      logEntry('Player has ' + player.cards.length + ' cards.');
-    }
-  }
-  drawPile.cards.reverse();
-  logEntry('DrawPile now has ' + drawPile.cards.length + ' cards left.');
-  renderPlayerCards();
 };
 
 const renderPlayerCards = () => {
