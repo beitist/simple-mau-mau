@@ -63,18 +63,6 @@ class DeckOfCards {
 class DiscardPile {
   constructor() {
     this.cards = [];
-    // OBSOLETE?
-    // this.renderTopCard = function () {
-    //   if (this.cards.length > 0) {
-    //     const indexOfLastCardAdded = this.cards.length - 1;
-    //     discardPileNode.innerHTML =
-    //       '<img src="' +
-    //       discardPile.cards[indexOfLastCardAdded].imageSrc +
-    //       '" width="100%"></img>';
-    //   } else {
-    //     discardPileNode.innerHTML = '';
-    //   };
-    // };
     this.receiveCard = function(card) {
       this.cards.push(card);
       discardPileNode.innerHTML = `<img src="${card.imageSrc}" width="100%" id="${card.uniqueID}"></img>`;
@@ -131,7 +119,7 @@ class Game {
         for (const player of this.table.seats) {
           logEntry('Last item in drawPile: ' + this.table.drawPile.cards[i].value);
           player.receiveCard(this.table.drawPile.cards.pop());
-          logEntry('Player has ' + player.cards.length + ' cards.');
+          logEntry('Player ID ' + player.playerID + ' has ' + player.cards.length + ' cards.');
         }
       }
       this.table.drawPile.cards.reverse();
@@ -155,13 +143,30 @@ class Player {
     this.cards = [];
     this.receiveCard = function(receivedCard) {
       this.cards.push(receivedCard);
+      this.cardsNode.innerHTML = '';
       if (this.isHuman) {
-        this.cardsNode.innerHTML = '';
-        for (let i = 0; i < this.cards.length; i ++) {
+        for (let i = 0; i < this.cards.length; i++) {
+          logEntry('Human rendering, for-block iteration #' + i);
           this.cardsNode.innerHTML += `<img src="${this.cards[i].imageSrc}" width="60px" id="${this.cards[i].uniqueID}"></img>`;
         };
+        logEntry('Rendering human player cards');
       } else {
-        
+        if (DEBUG_GAME_LOGIC) {
+          for (let i = 0; i < this.cards.length; i++) {
+            logEntry('PlayerID' + this.playerID + ' for-block render iteration #' + i);
+            logEntry(`Player Object Info:
+            ID: ${this.playerID}
+            cardsNode: ${this.cardsNode.toString()}
+            received card: ${receivedCard.uniqueID}`);
+            this.cardsNode.innerHTML += `<img src="${this.cards[i].imageSrc}" width="60px" id="${this.cards[i].uniqueID}"></img>`;
+          };
+          logEntry('PlayerID ' + this.playerID + ' now has ' + this.cards.length + ' cards. DEBUG MODE ON');
+        } else {
+          for (let i = 0; i < this.cards.length; i++) {
+            this.cardsNode.innerHTML += `<img src="${BACK_OF_CARD_IMAGE}" width="60px" id="${this.cards[i].uniqueID}"></img>`;
+          };
+          logEntry('PlayerID ' + this.playerID + ' now has ' + this.cards.length + ' cards. DEBUG MODE OFF');
+        }
       };
       logEntry('Card received, node updated.');
     };
@@ -224,31 +229,6 @@ const shiftCardsToDrawPile = () => {
   }
   drawPile.cards = deckOfCards.cards;
   deckOfCards.cards = [];
-};
-
-const renderPlayerCards = () => {
-  for (let i = 0; i < table.length; i++) {
-    if (i == 0) {
-      table[0].forEach(function (card) {
-        this.cardsNodeInnerHTML +=
-          '<img src="' + card.imageSrc + '" width="50px">';
-      });
-    } else {
-      if (DEBUG_GAME_LOGIC) {
-        currentPlayerNode = document.getElementById('player' + i + '-cards');
-        table[i].forEach(function (card) {
-          currentPlayerNode.innerHTML +=
-            '<img src="' + card.imageSrc + '" width="50px">';
-        });
-      } else {
-        currentPlayerNode = document.getElementById('player' + i + '-cards');
-        table[i].forEach(function (card) {
-          currentPlayerNode.innerHTML +=
-            '<img src="' + BACK_OF_CARD_IMAGE + '" width="50px">';
-        });
-      }
-    }
-  }
 };
 
 const setupGamePiles = () => {};
