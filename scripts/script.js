@@ -12,7 +12,6 @@ const topTenButton = document.getElementById('button-top-ten');
 const versionElement = document.getElementById('header-version');
 
 const opponentsNode = document.getElementById('opponents');
-const playerCardsNode = document.getElementById('player-cards');
 const discardPileNode = document.getElementById('discard-pile');
 const drawPileNode = document.getElementById('draw-pile');
 
@@ -21,14 +20,6 @@ let totalNumberOfPlayers = 3;
 let cardsPerPlayer = 5;
 
 let gameGoesClockwise = true;
-
-class CardRenderer {
-  constructor() {
-    this.updateNodes = function(from) {
-      if (from == 'drawPile') {}
-    };
-  }
-}
 
 class DeckOfCards {
   constructor() {
@@ -62,6 +53,7 @@ class DeckOfCards {
         color: color,
         score: cardScoreValue,
         imageSrc: cardImageFileAndPath,
+        uniqueID: cardValue + color[0].toUpperCase(),
       };
       return card;
     };
@@ -71,20 +63,21 @@ class DeckOfCards {
 class DiscardPile {
   constructor() {
     this.cards = [];
-    this.renderTopCard = function () {
-      if (this.cards.length > 0) {
-        const indexOfLastCardAdded = this.cards.length - 1;
-        discardPileNode.innerHTML =
-          '<img src="' +
-          discardPile.cards[indexOfLastCardAdded].imageSrc +
-          '" width="100%"></img>';
-      } else {
-        discardPileNode.innerHTML = '';
-      };
-    };
+    // OBSOLETE?
+    // this.renderTopCard = function () {
+    //   if (this.cards.length > 0) {
+    //     const indexOfLastCardAdded = this.cards.length - 1;
+    //     discardPileNode.innerHTML =
+    //       '<img src="' +
+    //       discardPile.cards[indexOfLastCardAdded].imageSrc +
+    //       '" width="100%"></img>';
+    //   } else {
+    //     discardPileNode.innerHTML = '';
+    //   };
+    // };
     this.receiveCard = function(card) {
       this.cards.push(card);
-      discardPileNode.innerHTML = '<img src="' + card.imageSrc + '" width="100%"></img>';
+      discardPileNode.innerHTML = `<img src="${card.imageSrc}" width="100%" id="${card.uniqueID}"></img>`;
     };
   };
 };
@@ -143,7 +136,6 @@ class Game {
       }
       this.table.drawPile.cards.reverse();
       logEntry('DrawPile now has ' + this.table.drawPile.cards.length + ' cards left.');
-      renderPlayerCards();
     };
     this.startTheGame = function() {
       if (this.drawPile.length > 0) {
@@ -159,25 +151,20 @@ class Player {
   constructor(isHuman, playerID) {
     this.isHuman = isHuman;
     this.playerID = parseInt(playerID);
-    this.cardsNodeInnerHTML = '';
+    this.cardsNode = '';
     this.cards = [];
     this.receiveCard = function(receivedCard) {
       this.cards.push(receivedCard);
-      this.updateNode();
+      if (this.isHuman) {
+        this.cardsNode.innerHTML = '';
+        for (let i = 0; i < this.cards.length; i ++) {
+          this.cardsNode.innerHTML += `<img src="${this.cards[i].imageSrc}" width="60px" id="${this.cards[i].uniqueID}"></img>`;
+        };
+      } else {
+        
+      };
+      logEntry('Card received, node updated.');
     };
-    this.init = function (isHuman) {
-      if (!this.isHuman) {
-        opponentsNode.innerHTML += `<div id="player${i}" class="opponent">
-      <p id="player${i}-cards" class="opponent-cards"></p>
-      <p id="player${i}-name" class="opponent-name">Player ${i}</p>
-      </div>`;
-      }
-    };
-    this.updateNode = function() {
-      
-      logEntry('Cards received, Node not yet updated.');
-    };
-    this.cardRenderer = new CardRenderer();
   };
 };
 
@@ -188,15 +175,18 @@ class Table {
     this.seats = [];
     this.initPlayers = function () {
       opponentsNode.innerHTML = '';
-      playerCardsNode.innerHTML = '';
       for (let i = 0; i < this.availableSeats; i++) {
-        let player = new Player(true);
-        if (i > 0) {
+        let player = new Player(true, i);
+        if (i == 0) {
+          player.cardsNode = document.getElementById('player-cards');
+        } else {
           player.isHuman = false;
           opponentsNode.innerHTML += `<div id="player${i}" class="opponent">
-        <p id="player${i}-cards" class="opponent-cards"></p>
-        <p id="player${i}-name" class="opponent-name">Player ${i}</p>
-        </div>`;
+            <p id="player${i}-cards" class="opponent-cards"></p>
+            <p id="player${i}-name" class="opponent-name">Player ${i}</p>
+            </div>`;
+          const playerCardNodeID = 'player' + i + '-cards';
+          player.cardsNode = document.getElementById(playerCardNodeID);
         };
         this.seats.push(player);
       };
@@ -226,8 +216,6 @@ const startNewGame = () => {
   game.shiftCardsToDrawPile();
   game.table.drawPile.shuffleCards();
   game.dealOutCards();
-  setupGamePiles();
-  playTheGame();
 };
 
 const shiftCardsToDrawPile = () => {
@@ -242,7 +230,7 @@ const renderPlayerCards = () => {
   for (let i = 0; i < table.length; i++) {
     if (i == 0) {
       table[0].forEach(function (card) {
-        playerCardsNode.innerHTML +=
+        this.cardsNodeInnerHTML +=
           '<img src="' + card.imageSrc + '" width="50px">';
       });
     } else {
