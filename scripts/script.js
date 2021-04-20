@@ -1,4 +1,4 @@
-const MAU_MAU_VERSION = 'dev 0.05';
+const MAU_MAU_VERSION = 'dev 0.10';
 const LOG_DETAILS = true;
 const DEBUG_GAME_LOGIC = true;
 
@@ -16,8 +16,8 @@ const discardPileNode = document.getElementById('discard-pile');
 const drawPileNode = document.getElementById('draw-pile');
 
 // totalNumberOfPlayers wird später variabel gesetzt (ab V 1.1)!
-let totalNumberOfPlayers = 3;
-let cardsPerPlayer = 5;
+let totalNumberOfPlayers = 8;
+let cardsPerPlayer = 3;
 
 let gameGoesClockwise = true;
 
@@ -157,7 +157,9 @@ class Player {
             logEntry(`Player Object Info:
             ID: ${this.playerID}
             cardsNode: ${this.cardsNode.toString()}
-            received card: ${receivedCard.uniqueID}`);
+            received card: ${receivedCard.uniqueID}
+            outerHTML: ${this.cardsNode.outerHTML}
+            HTML to add: <img src="${this.cards[i].imageSrc}">`);
             this.cardsNode.innerHTML += `<img src="${this.cards[i].imageSrc}" width="60px" id="${this.cards[i].uniqueID}"></img>`;
           };
           logEntry('PlayerID ' + this.playerID + ' now has ' + this.cards.length + ' cards. DEBUG MODE ON');
