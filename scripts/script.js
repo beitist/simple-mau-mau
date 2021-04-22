@@ -190,12 +190,13 @@ class Player {
   constructor(isHuman, playerID) {
     this.isHuman = isHuman;
     this.playerID = parseInt(playerID);
+    this.name = 'Player ' + playerID;
     this.cardsNode = '';
     this.cards = [];
     this.receiveCard = function(receivedCard) {
       this.cards.push(receivedCard);
       this.cardsNode.appendChild(receivedCard.cardImageNode);
-      receivedCard.cardImageNode.addEventListener('click', clickCard);
+      receivedCard.cardImageNode.addEventListener('click', clickCard.bind(null, this.name, receivedCard.uniqueID), false);
       logEntry('Card received, node updated.', 2);
     };  
   };  
@@ -246,9 +247,10 @@ const computerPlays = (computerPlayer) => {
 
 const playerPlays = () => {};
 
-const clickCard = () => {
+const clickCard = (player, card) => {
   //Testing the add event listener on img src card nodes
-  alert('Yes!');
+  alert('Yes! Player: ' + player + ' Card: ' + card);
+
 }
 
 initStartScreen();
