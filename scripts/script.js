@@ -138,25 +138,14 @@ class DeckOfCards {
       const CARD_VALUES = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
       for (const color of CARD_COLORS) {
         for (const cardValue of CARD_VALUES) {
-          const card = this.makeCardObject(color, cardValue);
+          const card = new Card(color, cardValue);
           this.cards.push(card);
           logEntry('Created a card with values ' + color + ' ' + cardValue, 2);
-        }
-      }
-    };
-    this.makeCardObject = function (color, cardValue) {
-      
-      const card = {
-        value: cardValue,
-        color: color,
-        score: cardScoreValue,
-        imageSrc: cardImageFileAndPath,
-        uniqueID: cardValue + color[0].toUpperCase(),
+        };
       };
-      return card;
     };
-  }
-}
+  };
+};
 
 class DiscardPile {
   constructor() {
