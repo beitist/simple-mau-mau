@@ -1,4 +1,4 @@
-const MAU_MAU_VERSION = 'dev 0.10';
+const MAU_MAU_VERSION = 'dev 0.03';
 const LOG_DETAILS = true;
 const LOG_DEPTH = 2;
 const DEBUG_GAME_LOGIC = true;
@@ -194,34 +194,8 @@ class Player {
     this.cards = [];
     this.receiveCard = function(receivedCard) {
       this.cards.push(receivedCard);
-      if (this.isHuman) {
-        for (let i = 0; i < this.cards.length; i++) {
-          logEntry('Human rendering, for-block iteration #' + i, 3);
-          this.cardsNode.appendChild(receivedCard.cardImageNode);
-        };  
-        logEntry('Rendering human player cards', 3);
-      } else {
-        if (DEBUG_GAME_LOGIC) {
-          for (let i = 0; i < this.cards.length; i++) {
-
-            logEntry('PlayerID ' + this.playerID + ' for-block render iteration #' + i, 2);
-            logEntry(`Player Object Info:
-            ID: ${this.playerID}
-            cardsNode: ${this.cardsNode.toString()}
-            received card: ${receivedCard.uniqueID}
-            outerHTML: ${this.cardsNode.outerHTML}
-            HTML to add: <img src="${this.cards[i].imageSrc}">`, 3);
-
-            this.cardsNode.appendChild(receivedCard.cardImageNode);
-          };  
-          logEntry('PlayerID ' + this.playerID + ' now has ' + this.cards.length + ' cards. DEBUG MODE ON', 3);
-        } else {
-          for (let i = 0; i < this.cards.length; i++) {
-            this.cardsNode.innerHTML += `<img src="${BACK_OF_CARD_IMAGE}" width="60px" id="${this.cards[i].uniqueID}"></img>`;
-          };  
-          logEntry('PlayerID ' + this.playerID + ' now has ' + this.cards.length + ' cards. DEBUG MODE OFF', 3);
-        }  
-      };  
+      this.cardsNode.appendChild(receivedCard.cardImageNode);
+      receivedCard.cardImageNode.addEventListener('click', clickCard);
       logEntry('Card received, node updated.', 2);
     };  
   };  
@@ -271,5 +245,10 @@ const computerPlays = (computerPlayer) => {
 };
 
 const playerPlays = () => {};
+
+const clickCard = () => {
+  //Testing the add event listener on img src card nodes
+  alert('Yes!');
+}
 
 initStartScreen();
