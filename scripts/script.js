@@ -186,7 +186,6 @@ class Table {
       opponentsNode.innerHTML = '';
       for (let i = 0; i < this.availableSeats; i++) {
         let player = new Player(true, i);
-        // player.init(player.playerID);
         if (i == 0) {
           player.cardsNode = document.getElementById('player-cards');
         } else {
