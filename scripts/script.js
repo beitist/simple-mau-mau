@@ -122,7 +122,7 @@ class Card {
     
     let imageNode = document.createElement('img');
     imageNode.src = PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
-    if (CSS_NOT_DONE_YET) { imageNode.width = '60px'; };
+    imageNode.width = '60';
     imageNode.classList.add('card');
     imageNode.id = cardValue + color[0].toUpperCase();
 
@@ -194,7 +194,6 @@ class Player {
     this.cards = [];
     this.receiveCard = function(receivedCard) {
       this.cards.push(receivedCard);
-      this.cardsNode.innerHTML = '';
       if (this.isHuman) {
         for (let i = 0; i < this.cards.length; i++) {
           logEntry('Human rendering, for-block iteration #' + i, 3);
