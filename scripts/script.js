@@ -16,10 +16,11 @@ const discardPileNode = document.getElementById('discard-pile');
 const drawPileNode = document.getElementById('draw-pile');
 
 // totalNumberOfPlayers wird später variabel gesetzt (ab V 1.1)!
-let totalNumberOfPlayers = 8;
-let cardsPerPlayer = 3;
+let totalNumberOfPlayers = 3;
+let cardsPerPlayer = 5;
 
 let gameGoesClockwise = true;
+let game = '';
 
 class DeckOfCards {
   constructor() {
@@ -136,6 +137,7 @@ class Game {
 }
 
 class Player {
+
   constructor(isHuman, playerID) {
     this.isHuman = isHuman;
     this.playerID = parseInt(playerID);
@@ -153,7 +155,7 @@ class Player {
       } else {
         if (DEBUG_GAME_LOGIC) {
           for (let i = 0; i < this.cards.length; i++) {
-            logEntry('PlayerID' + this.playerID + ' for-block render iteration #' + i);
+            logEntry('PlayerID ' + this.playerID + ' for-block render iteration #' + i);
             logEntry(`Player Object Info:
             ID: ${this.playerID}
             cardsNode: ${this.cardsNode.toString()}
@@ -184,14 +186,27 @@ class Table {
       opponentsNode.innerHTML = '';
       for (let i = 0; i < this.availableSeats; i++) {
         let player = new Player(true, i);
+        // player.init(player.playerID);
         if (i == 0) {
           player.cardsNode = document.getElementById('player-cards');
         } else {
           player.isHuman = false;
-          opponentsNode.innerHTML += `<div id="player${i}" class="opponent">
-            <p id="player${i}-cards" class="opponent-cards"></p>
-            <p id="player${i}-name" class="opponent-name">Player ${i}</p>
-            </div>`;
+          const opponentDivOuter = document.createElement('div');
+          opponentDivOuter.classList.add('opponent');
+          opponentDivOuter.id = 'player' + i;
+          opponentsNode.appendChild(opponentDivOuter);
+
+          const opponentCardsDiv = document.createElement('p');
+          opponentCardsDiv.classList.add('opponent-cards');
+          opponentCardsDiv.id = 'player' + i + '-cards';
+          opponentDivOuter.appendChild(opponentCardsDiv);
+
+          const opponentName = document.createElement('p');
+          opponentName.classList.add('opponent-name');
+          opponentName.id = 'player' + i + '-name';
+          opponentName.innerText = 'Player' + i;
+          opponentDivOuter.appendChild(opponentName);
+
           const playerCardNodeID = 'player' + i + '-cards';
           player.cardsNode = document.getElementById(playerCardNodeID);
         };
@@ -217,7 +232,7 @@ const initStartScreen = () => {
 
 const startNewGame = () => {
   logEntry('StartNewGame clicked');
-  let game = new Game();
+  game = new Game();
   game.table.initPlayers();
   game.deckOfCards.init();
   game.shiftCardsToDrawPile();
