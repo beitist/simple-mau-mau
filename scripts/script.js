@@ -1,6 +1,8 @@
 const MAU_MAU_VERSION = 'dev 0.10';
 const LOG_DETAILS = true;
+const LOG_DEPTH = 2;
 const DEBUG_GAME_LOGIC = true;
+const CSS_NOT_DONE_YET = true;
 
 const PATH_TO_CARD_IMAGES = 'img/png/';
 const BACK_OF_CARD_IMAGE = 'img/png/red_back.png';
@@ -41,13 +43,13 @@ class Game {
       this.table.drawDeck.cards.reverse();
       for (let i = 0; i < this.table.initialCards; i++) {
         for (const player of this.table.seats) {
-          logEntry('Last item in drawDeck: ' + this.table.drawDeck.cards[i].value);
+          logEntry('Last item in drawDeck: ' + this.table.drawDeck.cards[i].value, 2);
           player.receiveCard(this.table.drawDeck.cards.pop());
-          logEntry('Player ID ' + player.playerID + ' has ' + player.cards.length + ' cards.');
+          logEntry('Player ID ' + player.playerID + ' has ' + player.cards.length + ' cards.', 2);
         }
       }
       this.table.drawDeck.cards.reverse();
-      logEntry('DrawDeck now has ' + this.table.drawDeck.cards.length + ' cards left.');
+      logEntry('DrawDeck now has ' + this.table.drawDeck.cards.length + ' cards left.', 2);
     };
     this.startTheGame = function() {
       if (this.drawDeck.length > 0) {
@@ -93,12 +95,40 @@ class Table {
         };
         this.seats.push(player);
       };
-      logEntry('Players generated; in total: ' + this.seats.length);
+      logEntry('Players generated; in total: ' + this.seats.length, 1);
     };
     this.drawDeck = new DrawDeck();
     this.discardPile = new DiscardPile();
   };
 };
+
+class Card {
+  constructor(color, cardValue) {
+    this.value = cardValue;
+    this.color = color;
+
+    let cardScoreValue = 0;
+    if (cardValue == 'A') {
+      cardScoreValue = 11;
+    } else if (cardValue > 6 && cardValue < 11) {
+      cardScoreValue = parseInt(cardValue);
+    } else {
+      cardScoreValue = 10;
+    }
+    this.score = cardScoreValue;
+
+    this.imageSrc = PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
+    this.uniqueID = cardValue + color[0].toUpperCase();
+    
+    let imageNode = document.createElement('img');
+    imageNode.src = PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
+    if (CSS_NOT_DONE_YET) { imageNode.width = '60px'; };
+    imageNode.classList.add('card');
+    imageNode.id = cardValue + color[0].toUpperCase();
+
+    this.cardImageNode = imageNode;
+  }
+} 
 
 class DeckOfCards {
   constructor() {
@@ -110,22 +140,11 @@ class DeckOfCards {
         for (const cardValue of CARD_VALUES) {
           const card = this.makeCardObject(color, cardValue);
           this.cards.push(card);
-          logEntry('Created a card with values ' + color + ' ' + cardValue);
+          logEntry('Created a card with values ' + color + ' ' + cardValue, 2);
         }
       }
     };
     this.makeCardObject = function (color, cardValue) {
-      let cardScoreValue = 0;
-      if (cardValue == 'A') {
-        cardScoreValue = 11;
-      } else if (cardValue > 6 && cardValue < 11) {
-        cardScoreValue = parseInt(cardValue);
-      } else {
-        cardScoreValue = 10;
-      }
-      
-      const cardImageFile = cardValue + color[0].toUpperCase() + '.png';
-      const cardImageFileAndPath = PATH_TO_CARD_IMAGES + cardImageFile;
       
       const card = {
         value: cardValue,
@@ -161,7 +180,7 @@ class DrawDeck {
       }
     };
     this.shuffleCards = function () {
-      logEntry('Shuffling started.');
+      logEntry('Shuffling started.', 2);
       let tempPile = [];
       this.cards.forEach(function (card) {
         tempPile.push(card);
@@ -172,7 +191,7 @@ class DrawDeck {
         this.cards.push(tempPile[randomPileIndex]);
         tempPile.splice(randomPileIndex, 1);
       }
-      logEntry('Cards shuffled.');
+      logEntry('Cards shuffled.', 1);
     };
   };
 };
@@ -189,37 +208,39 @@ class Player {
       this.cardsNode.innerHTML = '';
       if (this.isHuman) {
         for (let i = 0; i < this.cards.length; i++) {
-          logEntry('Human rendering, for-block iteration #' + i);
-          this.cardsNode.innerHTML += `<img src="${this.cards[i].imageSrc}" width="60px" id="${this.cards[i].uniqueID}"></img>`;
+          logEntry('Human rendering, for-block iteration #' + i, 3);
+          this.cardsNode.appendChild(receivedCard.cardImageNode);
         };  
-        logEntry('Rendering human player cards');
+        logEntry('Rendering human player cards', 3);
       } else {
         if (DEBUG_GAME_LOGIC) {
           for (let i = 0; i < this.cards.length; i++) {
-            logEntry('PlayerID ' + this.playerID + ' for-block render iteration #' + i);
+
+            logEntry('PlayerID ' + this.playerID + ' for-block render iteration #' + i, 2);
             logEntry(`Player Object Info:
             ID: ${this.playerID}
             cardsNode: ${this.cardsNode.toString()}
             received card: ${receivedCard.uniqueID}
             outerHTML: ${this.cardsNode.outerHTML}
-            HTML to add: <img src="${this.cards[i].imageSrc}">`);
-            this.cardsNode.innerHTML += `<img src="${this.cards[i].imageSrc}" width="60px" id="${this.cards[i].uniqueID}"></img>`;
+            HTML to add: <img src="${this.cards[i].imageSrc}">`, 3);
+
+            this.cardsNode.appendChild(receivedCard.cardImageNode);
           };  
-          logEntry('PlayerID ' + this.playerID + ' now has ' + this.cards.length + ' cards. DEBUG MODE ON');
+          logEntry('PlayerID ' + this.playerID + ' now has ' + this.cards.length + ' cards. DEBUG MODE ON', 3);
         } else {
           for (let i = 0; i < this.cards.length; i++) {
             this.cardsNode.innerHTML += `<img src="${BACK_OF_CARD_IMAGE}" width="60px" id="${this.cards[i].uniqueID}"></img>`;
           };  
-          logEntry('PlayerID ' + this.playerID + ' now has ' + this.cards.length + ' cards. DEBUG MODE OFF');
+          logEntry('PlayerID ' + this.playerID + ' now has ' + this.cards.length + ' cards. DEBUG MODE OFF', 3);
         }  
       };  
-      logEntry('Card received, node updated.');
+      logEntry('Card received, node updated.', 2);
     };  
   };  
 };  
 
-const logEntry = (logText) => {
-  if (LOG_DETAILS) {
+const logEntry = (logText, depth = 1) => {
+  if (LOG_DETAILS && LOG_DEPTH >= depth) {
     console.log(logText);
   };
 };
@@ -230,7 +251,7 @@ const initStartScreen = () => {
 };
 
 const startNewGame = () => {
-  logEntry('StartNewGame clicked');
+  logEntry('StartNewGame clicked', 1);
   game = new Game();
   game.table.initPlayers();
   game.deckOfCards.init();
