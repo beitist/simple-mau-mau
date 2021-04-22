@@ -10,3 +10,10 @@ This is my very first JavaScript project and I use it as a playground and experi
 The card images are taken from the American Contract Bridge League, which offers them free to download on their website: http://acbl.mybigcommerce.com/52-playing-cards/
 
 Should they be used in error or against any license, kindly inform me, I will replace them.
+
+# Version overview
+
+**No functioning version yet available!**
+
+- **0.02** Changed to object design
+- **0.01** functional draft
