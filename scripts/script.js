@@ -1,7 +1,7 @@
 const MAU_MAU_VERSION = 'dev 0.03';
 const LOG_DETAILS = true;
 const LOG_DEPTH = 2;
-const DEBUG_GAME_LOGIC = true;
+const DEBUG_GAME_LOGIC = false;
 const CSS_NOT_DONE_YET = true;
 
 const PATH_TO_CARD_IMAGES = 'img/png/';
@@ -39,7 +39,9 @@ class Game {
       if (this.table.drawDeck.cards.length > 0) {
         this.table.drawDeck.cards = [];
       }
-      this.table.drawDeck.cards = this.deckOfCards.cards;
+      for (const card of this.deckOfCards.cards) {
+        this.table.drawDeck.push(card);
+      }
       this.deckOfCards.cards = [];
     };
 
@@ -48,22 +50,32 @@ class Game {
       for (let i = 0; i < this.table.initialCards; i++) {
         for (const player of this.table.seats) {
           player.receiveCard(this.table.drawDeck.cards.pop());
-          logEntry('Player ID ' + player.playerId + ' has ' + player.cards.length + ' cards.', 2);
+          logEntry(
+            'Player ID ' +
+              player.playerId +
+              ' has ' +
+              player.cards.length +
+              ' cards.',
+            2
+          );
         }
       }
       this.table.drawDeck.cards.reverse();
-      logEntry('DrawDeck now has ' + this.table.drawDeck.cards.length + ' cards left.', 2);
+      logEntry(
+        'DrawDeck now has ' + this.table.drawDeck.cards.length + ' cards left.',
+        2
+      );
     };
 
-    this.startTheGame = function() {
+    this.startTheGame = function () {
       if (this.drawDeck.length > 0) {
         this.discardPile.receiveCard(this.drawDeck.shift());
       } else {
         // DiscardPile außer oberster Karte neu mischen
-      };
+      }
     };
   }
-}  
+}
 
 class Table {
   constructor(totalNumberOfPlayers, cardsPerPlayer) {
@@ -71,38 +83,54 @@ class Table {
     this.initialCards = cardsPerPlayer;
     this.seats = [];
 
-      opponentsNode.innerHTML = '';
-      for (let i = 0; i < this.availableSeats; i++) {
-        let player = new Player(true, i);
-        if (i == 0) {
-          player.cardsNode = document.getElementById('player-cards');
-        } else {
-          player.isHuman = false;
-          const opponentDivOuter = document.createElement('div');
-          opponentDivOuter.classList.add('opponent');
-          opponentDivOuter.id = 'player' + i;
-          opponentsNode.appendChild(opponentDivOuter);
-          
-          const opponentCardsDiv = document.createElement('p');
-          opponentCardsDiv.classList.add('opponent-cards');
-          opponentCardsDiv.id = 'player' + i + '-cards';
-          opponentDivOuter.appendChild(opponentCardsDiv);
-          
-          const opponentName = document.createElement('p');
-          opponentName.classList.add('opponent-name');
-          opponentName.id = 'player' + i + '-name';
-          opponentName.innerText = 'Player' + i;
-          opponentDivOuter.appendChild(opponentName);
-          
-          const playerCardNodeId = 'player' + i + '-cards';
-          player.cardsNode = document.getElementById(playerCardNodeId);
-        };
-        this.seats.push(player);
-      };
-      logEntry('Players generated; in total: ' + this.seats.length, 1);
+    opponentsNode.innerHTML = '';
+    for (let i = 0; i < this.availableSeats; i++) {
+      let player = new Player(true, i);
+      if (i == 0) {
+        player.cardsNode = document.getElementById('player-cards');
+      } else {
+        player.isHuman = false;
+        const opponentDivOuter = document.createElement('div');
+        opponentDivOuter.classList.add('opponent');
+        opponentDivOuter.id = 'player' + i;
+        opponentsNode.appendChild(opponentDivOuter);
+
+        const opponentCardsDiv = document.createElement('p');
+        opponentCardsDiv.classList.add('opponent-cards');
+        opponentCardsDiv.id = 'player' + i + '-cards';
+        opponentDivOuter.appendChild(opponentCardsDiv);
+
+        const opponentName = document.createElement('p');
+        opponentName.classList.add('opponent-name');
+        opponentName.id = 'player' + i + '-name';
+        opponentName.innerText = 'Player' + i;
+        opponentDivOuter.appendChild(opponentName);
+
+        player.cardsNode = opponentCardsDiv;
+      }
+      this.seats.push(player);
+    }
+    logEntry('Players generated; in total: ' + this.seats.length, 1);
 
     this.drawDeck = new DrawDeck();
     this.discardPile = new DiscardPile();
+  }
+}
+
+class DeckOfCards {
+  constructor() {
+    this.cards = [];
+
+    const CARD_COLORS = ['diamond', 'heart', 'spades', 'club'];
+    const CARD_VALUES = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    for (const color of CARD_COLORS) {
+      for (const cardValue of CARD_VALUES) {
+        const card = new Card(color, cardValue);
+        this.cards.push(card);
+        logEntry('Created a card with values ' + color + ' ' + cardValue, 2);
+      };
+    };
+
   };
 };
 
@@ -110,6 +138,7 @@ class Card {
   constructor(color, cardValue) {
     this.value = cardValue;
     this.color = color;
+    this.currentOwner = 'deck';
 
     let cardScoreValue = 0;
     if (cardValue == 'A') {
@@ -121,44 +150,30 @@ class Card {
     }
     this.score = cardScoreValue;
 
-    this.imageSrc = PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
+    this.imageSrc =
+      PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
     this.uniqueID = cardValue + color[0].toUpperCase();
-    
+
     let imageNode = document.createElement('img');
-    imageNode.src = PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
+    imageNode.src =
+      PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
     imageNode.width = '60';
     imageNode.classList.add('card');
     imageNode.id = cardValue + color[0].toUpperCase();
 
     this.cardImageNode = imageNode;
   }
-} 
-
-class DeckOfCards {
-
-  constructor() {
-    this.cards = [];
-
-    const CARD_COLORS = ['diamond', 'heart', 'spades', 'club'];
-    const CARD_VALUES = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-    for (const color of CARD_COLORS) {
-      for (const cardValue of CARD_VALUES) {
-        const card = new Card(color, cardValue);
-        this.cards.push(card);
-        logEntry('Created a card with values ' + color + ' ' + cardValue, 2);
-      }
-    }
-
-  }
-};
+}
 
 class DiscardPile {
   constructor() {
     this.cards = [];
 
-    this.receiveCard = function(card) {
+    this.receiveCard = function (card) {
       this.cards.push(card);
-      discardPileNode.innerHTML = `<img src="${card.imageSrc}" width="100%" id="${card.uniqueID}"></img>`;
+      card.currentOwner = 'discardPile';
+      discardPileNode.innerHTML = '';
+      discardPileNode.appendChild(card.cardImageNode);
     };
   };
 };
@@ -173,7 +188,7 @@ class DrawDeck {
         this.drawDeckCardImageNode.appendChild(BACK_OF_CARD_IMG_NODE);
       } else {
         this.drawDeckCardImageNode = '';
-      }
+      };
     };
 
     this.shuffleCards = function () {
@@ -187,20 +202,18 @@ class DrawDeck {
         const randomPileIndex = Math.floor(Math.random() * i);
         this.cards.push(tempPile[randomPileIndex]);
         tempPile.splice(randomPileIndex, 1);
-      }
+      };
       logEntry('Cards shuffled.', 1);
     };
 
-    this.drawCard = function() {
-      return this.cards.pop();
-
+    this.receiveCard = function (card) {
+      this.cards.push(card);
+      card.currentOwner = 'drawDeck';
     }
-
-  };
-};
+  }
+}
 
 class Player {
-  
   constructor(isHuman, playerId) {
     this.isHuman = isHuman;
     this.playerId = parseInt(playerId);
@@ -208,19 +221,34 @@ class Player {
     this.cardsNode = '';
     this.cards = [];
 
-    this.receiveCard = function(receivedCard) {
+    this.receiveCard = function (receivedCard) {
       this.cards.push(receivedCard);
       this.cardsNode.appendChild(receivedCard.cardImageNode);
-      receivedCard.cardImageNode.addEventListener('click', clickCard.bind(null, this.name, receivedCard.uniqueID), false);
+      receivedCard.cardImageNode.addEventListener(
+        'click',
+        this.playCard.bind(null, receivedCard),
+        false
+      );
       logEntry('Card received, node updated.', 2);
-    };  
-  };  
-};  
+    };
+
+    this.playCard = function (card) {
+      const pID = this.playerId;
+      logEntry('Inside playCard @ player ' + this.playerId);
+      game.table.discardPile.receiveCard(card);
+      const playedCardIndex = this.cards.findIndex(
+        (card) => cardInHand.uniqueID == card.uniqueID
+      );
+      logEntry('playCard function: playedCardIndex: ' + playedCardIndex, 1);
+      this.cards.splice(playedCardIndex, 1);
+    };
+  }
+}
 
 const logEntry = (logText, depth = 1) => {
   if (LOG_DETAILS && LOG_DEPTH >= depth) {
     console.log(logText);
-  };
+  }
 };
 
 const initStartScreen = () => {
@@ -260,10 +288,8 @@ const computerPlays = (computerPlayer) => {
 
 const playerPlays = () => {};
 
-const clickCard = (player, card) => {
-  //Testing the add event listener on img src card nodes
-  alert('Yes! Player: ' + player + ' Card: ' + card);
-
-}
+// const playCard = (player, card) => {
+//   game.table.discardPile.receiveCard(card);
+// };
 
 initStartScreen();
