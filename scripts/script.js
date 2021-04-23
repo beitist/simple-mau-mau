@@ -40,7 +40,7 @@ class Game {
         this.table.drawDeck.cards = [];
       }
       for (const card of this.deckOfCards.cards) {
-        this.table.drawDeck.push(card);
+        this.table.drawDeck.receiveCard(card);
       }
       this.deckOfCards.cards = [];
     };
@@ -222,6 +222,7 @@ class Player {
     this.cards = [];
 
     this.receiveCard = function (receivedCard) {
+      receivedCard.currentOwner = this.playerId;
       this.cards.push(receivedCard);
       this.cardsNode.appendChild(receivedCard.cardImageNode);
       receivedCard.cardImageNode.addEventListener(
@@ -233,14 +234,17 @@ class Player {
     };
 
     this.playCard = function (card) {
-      const pID = this.playerId;
-      logEntry('Inside playCard @ player ' + this.playerId);
-      game.table.discardPile.receiveCard(card);
-      const playedCardIndex = this.cards.findIndex(
-        (card) => cardInHand.uniqueID == card.uniqueID
+      logEntry('Inside playCard @ player ' + card.currentOwner);
+      const currentOwner = game.table.seats.findIndex(
+        (player) => player.playerId == card.currentOwner
+      );
+      logEntry('Found currentOwner-Index as follows: ' + currentOwner);
+      const playedCardIndex = game.table.seats[currentOwner].cards.findIndex(
+        (cardInHand) => cardInHand.uniqueID == card.uniqueID
       );
       logEntry('playCard function: playedCardIndex: ' + playedCardIndex, 1);
-      this.cards.splice(playedCardIndex, 1);
+      game.table.seats[currentOwner].cards.splice(playedCardIndex, 1);
+      game.table.discardPile.receiveCard(card);
     };
   }
 }
