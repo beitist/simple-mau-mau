@@ -1,12 +1,12 @@
 const MAU_MAU_VERSION = 'dev 0.03';
 const LOG_DETAILS = true;
-const LOG_DEPTH = 2;
-const DEBUG_GAME_LOGIC = false;
+const LOG_DEPTH = 3;
+const SHOW_ALL_CARDS = false;
 const CSS_NOT_DONE_YET = true;
 
 const PATH_TO_CARD_IMAGES = 'img/png/';
 const BACK_OF_CARD_IMAGE_SRC = 'img/png/red_back.png';
-const BACK_OF_CARD_IMG_NODE = document.createElement('img');
+let BACK_OF_CARD_IMG_NODE = document.createElement('img');
 BACK_OF_CARD_IMG_NODE.src = BACK_OF_CARD_IMAGE_SRC;
 BACK_OF_CARD_IMG_NODE.classList.add = 'card';
 
@@ -128,11 +128,10 @@ class DeckOfCards {
         const card = new Card(color, cardValue);
         this.cards.push(card);
         logEntry('Created a card with values ' + color + ' ' + cardValue, 2);
-      };
-    };
-
-  };
-};
+      }
+    }
+  }
+}
 
 class Card {
   constructor(color, cardValue) {
@@ -161,7 +160,13 @@ class Card {
     imageNode.classList.add('card');
     imageNode.id = cardValue + color[0].toUpperCase();
 
+    let backImageNode = document.createElement('img');
+    backImageNode.src = BACK_OF_CARD_IMAGE_SRC;
+    backImageNode.classList.add('card');
+    backImageNode.id = cardValue + color[0].toUpperCase();
+
     this.cardImageNode = imageNode;
+    this.backImageNode = backImageNode;
   }
 }
 
@@ -175,8 +180,8 @@ class DiscardPile {
       discardPileNode.innerHTML = '';
       discardPileNode.appendChild(card.cardImageNode);
     };
-  };
-};
+  }
+}
 
 class DrawDeck {
   constructor() {
@@ -188,7 +193,7 @@ class DrawDeck {
         this.drawDeckCardImageNode.appendChild(BACK_OF_CARD_IMG_NODE);
       } else {
         this.drawDeckCardImageNode = '';
-      };
+      }
     };
 
     this.shuffleCards = function () {
@@ -202,14 +207,14 @@ class DrawDeck {
         const randomPileIndex = Math.floor(Math.random() * i);
         this.cards.push(tempPile[randomPileIndex]);
         tempPile.splice(randomPileIndex, 1);
-      };
+      }
       logEntry('Cards shuffled.', 1);
     };
 
     this.receiveCard = function (card) {
       this.cards.push(card);
       card.currentOwner = 'drawDeck';
-    }
+    };
   }
 }
 
@@ -224,17 +229,26 @@ class Player {
     this.receiveCard = function (receivedCard) {
       receivedCard.currentOwner = this.playerId;
       this.cards.push(receivedCard);
-      this.cardsNode.appendChild(receivedCard.cardImageNode);
-      receivedCard.cardImageNode.addEventListener(
-        'click',
-        this.playCard.bind(null, receivedCard),
-        false
-      );
+      if (SHOW_ALL_CARDS || this.isHuman) {
+        this.cardsNode.appendChild(receivedCard.cardImageNode);
+        receivedCard.cardImageNode.addEventListener(
+          'click',
+          this.playCard.bind(null, receivedCard),
+          false
+        );
+      } else {
+        this.cardsNode.appendChild(receivedCard.backImageNode);
+        receivedCard.backImageNode.addEventListener(
+          'click',
+          this.playCard.bind(null, receivedCard),
+          false
+        );
+      }
       logEntry('Card received, node updated.', 2);
     };
 
     this.playCard = function (card) {
-      logEntry('Inside playCard @ player ' + card.currentOwner);
+      logEntry('Inside playCard @ player ' + card.currentOwner, 3);
       const currentOwner = game.table.seats.findIndex(
         (player) => player.playerId == card.currentOwner
       );
@@ -244,15 +258,20 @@ class Player {
       );
       logEntry('playCard function: playedCardIndex: ' + playedCardIndex, 1);
       game.table.seats[currentOwner].cards.splice(playedCardIndex, 1);
+      if (!game.table.seats[currentOwner].isHuman && !SHOW_ALL_CARDS) {
+        let imageNodeEntry = document.getElementById(card.uniqueID);
+        logEntry('Node entry for back card image @ ' + currentOwner + ' is ' + imageNodeEntry.innerHTML, 3);
+        game.table.seats[currentOwner].cardsNode.removeChild(imageNodeEntry);
+      };
       game.table.discardPile.receiveCard(card);
     };
-  }
-}
+  };
+};
 
 const logEntry = (logText, depth = 1) => {
   if (LOG_DETAILS && LOG_DEPTH >= depth) {
     console.log(logText);
-  }
+  };
 };
 
 const initStartScreen = () => {
