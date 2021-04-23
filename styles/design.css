@@ -34,3 +34,10 @@ button {
   width: 100px;
   height: 160px;
 }
+
+
+
+.card {
+  width: 100%;
+  max-width: 80px;
+}

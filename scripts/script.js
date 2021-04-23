@@ -5,7 +5,10 @@ const DEBUG_GAME_LOGIC = true;
 const CSS_NOT_DONE_YET = true;
 
 const PATH_TO_CARD_IMAGES = 'img/png/';
-const BACK_OF_CARD_IMAGE = 'img/png/red_back.png';
+const BACK_OF_CARD_IMAGE_SRC = 'img/png/red_back.png';
+const BACK_OF_CARD_IMG_NODE = document.createElement('img');
+BACK_OF_CARD_IMG_NODE.src = BACK_OF_CARD_IMAGE_SRC;
+BACK_OF_CARD_IMG_NODE.classList.add = 'card';
 
 const newGameButton = document.getElementById('button-new-game');
 const undoButton = document.getElementById('button-undo');
@@ -15,7 +18,6 @@ const versionElement = document.getElementById('header-version');
 
 const opponentsNode = document.getElementById('opponents');
 const discardPileNode = document.getElementById('discard-pile');
-const drawDeckNode = document.getElementById('draw-deck');
 
 // totalNumberOfPlayers wird später variabel gesetzt (ab V 1.1)!
 let totalNumberOfPlayers = 3;
@@ -164,14 +166,13 @@ class DiscardPile {
 class DrawDeck {
   constructor() {
     this.cards = [];
-    this.cardImageNode = document.getElementById('draw-deck');
+    this.drawDeckCardImageNode = document.getElementById('draw-deck');
 
     this.renderLastCard = function () {
       if (this.cards.length > 0) {
-        drawDeckNode.style +=
-        'background-image: url("' + BACK_OF_CARD_IMAGE + '")';
+        this.drawDeckCardImageNode.appendChild(BACK_OF_CARD_IMG_NODE);
       } else {
-        drawDeckNode.style = '';
+        this.drawDeckCardImageNode = '';
       }
     };
 
