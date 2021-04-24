@@ -2,6 +2,7 @@ const MAU_MAU_VERSION = 'dev 0.03';
 const LOG_DETAILS = true;
 const LOG_DEPTH = 3;
 const SHOW_ALL_CARDS = false;
+const TURN_OFF_COMPUTER_PLAYING = false;
 const CSS_NOT_DONE_YET = true;
 
 const PATH_TO_CARD_IMAGES = 'img/png/';
@@ -31,9 +32,21 @@ class Game {
     this.table = new Table(totalNumberOfPlayers, cardsPerPlayer);
     this.clockwiseTurns = true;
     this.currentPlayerIndex = 0;
-    this.lastPlayerIndex = 0;
+    this.lastPlayerIndex = 2;
     this.nextPlayerIndex = 1;
     this.deckOfCards = new DeckOfCards();
+
+    this.lastMove = {
+      from: '',
+      to: '',
+      card: '',
+    };
+
+    this.setLastMove = function (from, to, card) {
+      this.lastMove.from = from;
+      this.lastMove.to = to;
+      this.lastMove.card = card;
+    };
 
     this.shiftCardsToDrawDeck = () => {
       if (this.table.drawDeck.cards.length > 0) {
@@ -49,7 +62,9 @@ class Game {
       this.table.drawDeck.cards.reverse();
       for (let i = 0; i < this.table.initialCards; i++) {
         for (const player of this.table.seats) {
-          player.receiveCard(this.table.drawDeck.cards.pop());
+          let card = this.table.drawDeck.cards.pop();
+          player.receiveCard(card);
+          game.setLastMove('drawdeck', player.playerId, card.uniqueID);
           logEntry(
             'Player ID ' +
               player.playerId +
@@ -60,6 +75,7 @@ class Game {
           );
         }
       }
+      this.table.discardPile.receiveCard(this.table.drawDeck.cards.pop());
       this.table.drawDeck.cards.reverse();
       logEntry(
         'DrawDeck now has ' + this.table.drawDeck.cards.length + ' cards left.',
@@ -73,6 +89,14 @@ class Game {
       } else {
         // DiscardPile außer oberster Karte neu mischen
       }
+    };
+
+    this.checkIfCardCanBePlayed = function (card) {
+      let cardOnTop = game.discardPile.returnCardOnTop();
+      logEntry('Checking if move is ok; cardOnTop is: ' + cardOnTop.uniqueID + '; argument card.uniqueId = ' + card.uniqueID);
+      if (cardOnTop.color == card.color || cardOnTop.value == card.value || card.value == 'J') {
+        return true;
+      } else { return false;}
     };
   }
 }
@@ -180,6 +204,10 @@ class DiscardPile {
       discardPileNode.innerHTML = '';
       discardPileNode.appendChild(card.cardImageNode);
     };
+
+    this.returnCardOnTop = function () {
+      return this.cards[this.cards.length - 1];
+    }
   }
 }
 
@@ -231,47 +259,62 @@ class Player {
       this.cards.push(receivedCard);
       if (SHOW_ALL_CARDS || this.isHuman) {
         this.cardsNode.appendChild(receivedCard.cardImageNode);
-        receivedCard.cardImageNode.addEventListener(
-          'click',
-          this.playCard.bind(null, receivedCard),
-          false
-        );
+        if (TURN_OFF_COMPUTER_PLAYING || this.isHuman) {
+          receivedCard.cardImageNode.addEventListener(
+            'click',
+            this.playCard.bind(null, receivedCard),
+            false
+          );
+        }
       } else {
         this.cardsNode.appendChild(receivedCard.backImageNode);
-        receivedCard.backImageNode.addEventListener(
-          'click',
-          this.playCard.bind(null, receivedCard),
-          false
-        );
+        if (TURN_OFF_COMPUTER_PLAYING) {
+          receivedCard.backImageNode.addEventListener(
+            'click',
+            this.playCard.bind(null, receivedCard),
+            false
+          );
+        }
       }
       logEntry('Card received, node updated.', 2);
     };
 
     this.playCard = function (card) {
-      logEntry('Inside playCard @ player ' + card.currentOwner, 3);
-      const currentOwner = game.table.seats.findIndex(
-        (player) => player.playerId == card.currentOwner
-      );
-      logEntry('Found currentOwner-Index as follows: ' + currentOwner);
-      const playedCardIndex = game.table.seats[currentOwner].cards.findIndex(
-        (cardInHand) => cardInHand.uniqueID == card.uniqueID
-      );
-      logEntry('playCard function: playedCardIndex: ' + playedCardIndex, 1);
-      game.table.seats[currentOwner].cards.splice(playedCardIndex, 1);
-      if (!game.table.seats[currentOwner].isHuman && !SHOW_ALL_CARDS) {
-        let imageNodeEntry = document.getElementById(card.uniqueID);
-        logEntry('Node entry for back card image @ ' + currentOwner + ' is ' + imageNodeEntry.innerHTML, 3);
-        game.table.seats[currentOwner].cardsNode.removeChild(imageNodeEntry);
-      };
-      game.table.discardPile.receiveCard(card);
+      if (game.checkIfCardCanBePlayed(card)) {
+        logEntry('Inside playCard @ player ' + card.currentOwner, 3);
+        const currentOwner = game.table.seats.findIndex(
+          (player) => player.playerId == card.currentOwner
+        );
+        logEntry('Found currentOwner-Index as follows: ' + currentOwner);
+        const playedCardIndex = game.table.seats[currentOwner].cards.findIndex(
+          (cardInHand) => cardInHand.uniqueID == card.uniqueID
+        );
+        logEntry('playCard function: playedCardIndex: ' + playedCardIndex, 3);
+        game.table.seats[currentOwner].cards.splice(playedCardIndex, 1);
+        if (!game.table.seats[currentOwner].isHuman && !SHOW_ALL_CARDS) {
+          let imageNodeEntry = document.getElementById(card.uniqueID);
+          logEntry(
+            'Node entry for back card image @ ' +
+              currentOwner +
+              ' is ' +
+              imageNodeEntry.innerHTML,
+            3
+          );
+          game.table.seats[currentOwner].cardsNode.removeChild(imageNodeEntry);
+        }
+        game.setLastMove(currentOwner, 'discardPile', card.uniqueID);
+        game.table.discardPile.receiveCard(card);
+      }
     };
-  };
-};
+
+    this.computerPlayCard;
+  }
+}
 
 const logEntry = (logText, depth = 1) => {
   if (LOG_DETAILS && LOG_DEPTH >= depth) {
     console.log(logText);
-  };
+  }
 };
 
 const initStartScreen = () => {
