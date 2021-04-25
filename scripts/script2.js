@@ -36,6 +36,9 @@ class Table {
     this.players = [];
     this.drawDeck = new DrawDeck();
     this.discardPile = new DiscardPile();
+    this.hasWinner = false;
+    this.currentPlayer = 0;
+    this.totalNumberOfMoves = 0;
   }
 }
 
@@ -113,7 +116,6 @@ class Card {
   }
 }
 
-
 // View
 class View {
   constructor() {
@@ -190,6 +192,7 @@ class View {
         cardNode.addEventListener('click', (function(idCopy, eventAttachedToHumanCopy) { return function() {
           if (eventAttachedToHumanCopy) {
             game.playCard(idCopy, 0);
+            game.play.next();
           } else {
             game.drawCard(idCopy, 0);
           }
@@ -205,14 +208,18 @@ class View {
 // Controller
 class Game {
   constructor() {
+
+    this.play = '';
+
     this.newGame = function() {
       table = new Table();
       view = new View();
-      this.createPlayers();
-      this.shuffleDeck();
-      this.dealInitialCards();
+      game.createPlayers();
+      game.shuffleDeck();
+      game.dealInitialCards();
       view.updateDeckView();
       view.updatePlayerView();
+      game.play = game.playGenerator();
     }
     
     this.createPlayers = function() {
@@ -306,6 +313,38 @@ class Game {
     this.getTopCardFromDiscardPile = function() {
       return table.discardPile.cards[table.discardPile.length - 1];
     }
+
+    this.playGenerator = function*() {
+      let maxPlayers = table.players.length;
+      while (!table.hasWinner) {
+        if (table.players[table.currentPlayer].isHuman) {
+          game.setNextPlayer();
+          yield;
+        } else {
+          game.performPlayerAction(table.currentPlayer);
+          game.setNextPlayer();
+        }
+        game.checkIfWeHaveAWinner();
+        table.totalNumberOfMoves++;
+        console.log('Generator, move #' + table.totalNumberOfMoves);
+      }
+    }
+
+    this.setNextPlayer = function() {
+      if (table.currentPlayer < (table.players.length - 1)) {
+        table.currentPlayer++;
+      } else {
+        table.currentPlayer = 0;
+      }
+    }
+
+    this.performPlayerAction = function() {
+      console.log('Opponent should play...');
+    }
+
+    this.checkIfWeHaveAWinner = function() {
+      console.log('Checking winner');
+    }
     
   }
 }
@@ -314,4 +353,4 @@ let table = new Table();
 let view = new View();
 const game = new Game();
 
-game.newGame();
+newGameButton.addEventListener('click', game.newGame);
