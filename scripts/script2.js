@@ -187,9 +187,9 @@ class View {
       if (addEvent) {
         cardNode.addEventListener('click', (function(idCopy, eventAttachedToHumanCopy) { return function() {
           if (eventAttachedToHumanCopy) {
-            controller.playCard(idCopy, 'player0');
+            controller.playCard(idCopy, 0);
           } else {
-            controller.dealCard(idCopy, 'player0');
+            controller.dealCard(idCopy, 0);
           }
         }})(card.uniqueID, eventAttachedToHuman));
       }
@@ -238,42 +238,30 @@ class Game {
       return players;
     }
 
-    this.drawCard = function(cardId, destination) {
-      
+    this.drawCard = function(cardId, playerId) {
+      const indexOfCardWithCardId = table.drawDeck.cards.indexOf(cardId);
+      const card = table.drawDeck.cards[indexOfCardWithCardId];
+
+      table.players[playerId].cards.push(card);
+      table.drawDeck.cards.splice(indexOfCardWithCardId, 1);
+
+      this.updateDeckView();
+      this.updatePlayerView();
+    }
+
+    this.playCard = function(cardId, playerId) {
+      const indexOfCardWithCardId = table.players[playerId].cards.indexOf(cardId);
+      const card = table.players[playerId].cards[indexOfCardWithCardId];
+
+      table.discardPile.cards.push(card);
+      table.players[playerId].cards.splice(indexOfCardWithCardId, 1);
+
+      this.updateDeckView();
+      this.updatePlayerView();
     }
     
   }
 }
-
-
-// class Moves {
-//   constructor() {
-//   }
-// }
-
-class PlayerController {
-  constructor() {
-
-    this.receiveCard = function (card) {
-      const re
-    }
-  }
-}
-
-class OpponentController {
-  constructor() {
-
-  }
-}
-
-class PileController {
-  constructor() {
-
-  }
-}
-
-
-
 
 const table = new Table();
 const view = new View();
