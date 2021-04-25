@@ -127,7 +127,7 @@ class View {
       const decks = game.getDecks();
       if (decks.discardPileCards.length > 0) {
         const lastCardOnDiscardPile = decks.discardPileCards[decks.discardPileCards.length-1];
-        const renderedCard = this.renderCard(lastCardOnDiscardPile);
+        const renderedCard = this.renderCard(lastCardOnDiscardPile, true, false, false);
         this.discardPileNode.appendChild(renderedCard);
       } else {
         // do nothing?
@@ -135,7 +135,7 @@ class View {
 
       if (decks.drawDeckCards.length > 0) {
         const lastCardOnDrawDeck = decks.drawDeckCards[decks.drawDeckCards.length-1];
-        const renderedCard = this.renderCard(lastCardOnDrawDeck);
+        const renderedCard = this.renderCard(lastCardOnDrawDeck, false, true, false);
         this.drawDeckNode.appendChild(renderedCard);
       } else {
         // do nothing?
@@ -143,23 +143,58 @@ class View {
 
     }
 
-    this.updatePlayerView = function(playerId) {
+    this.updatePlayerView = function() {
+      const players = game.getPlayers();
+      const humanNode = HUMAN_NODE;
+      const opponentsNode = OPPONENTS_NODE;
 
+      humanNode.innerHTML = '';
+      opponentsNode.innerHTML = '';
+
+      for (const player of players) {
+        const isHuman = player.isHuman;
+
+        let playerCardsNode = document.createElement('div');
+        playerCardsNode.classList.add('player-cards');
+        playerCardsNode.id = 'player' + player.id;
+
+        for (const card of player.hand) {
+          const cardNode = this.renderCard(card, isHuman, isHuman, isHuman);
+          playerCardsNode.appendChild(cardNode);
+        }
+
+        if (isHuman) {
+          humanNode.appendChild(playerCardsNode);
+        } else {
+          opponentsNode.appendChild(playerCardsNode);
+        }
+
+      }
     }
 
-    this.renderCard = function(card, frontFace = true, addEvent = false) {
-      let imageNode = document.createElement('img');
-      imageNode.width = '60';
-      imageNode.classList.add('card');
-      imageNode.id = card.uniqueID;
+    this.renderCard = function(card, frontFace = true, addEvent = false, eventAttachedToHuman = false) {
+      let cardNode = document.createElement('img');
+      cardNode.width = '60';
+      cardNode.classList.add('card');
+      cardNode.id = card.uniqueID;
 
       if (frontFace) {
-        imageNode.src = card.imageSrc;
+        cardNode.src = card.imageSrc;
       } else { 
-        imageNode.src = BACK_OF_CARD_IMAGE_SRC;
+        cardNode.src = BACK_OF_CARD_IMAGE_SRC;
       }
 
-      return imageNode;
+      if (addEvent) {
+        cardNode.addEventListener('click', (function(idCopy, eventAttachedToHumanCopy) { return function() {
+          if (eventAttachedToHumanCopy) {
+            controller.playCard(idCopy, 'player0');
+          } else {
+            controller.dealCard(idCopy, 'player0');
+          }
+        }})(card.uniqueID, eventAttachedToHuman));
+      }
+
+      return cardNode;
     }
 
   }
@@ -192,6 +227,19 @@ class Game {
       return decks = {
         drawDeckCards: table.drawDeck.cards,
         discardPileCards: table.discardPile.cards,
+      }
+    }
+
+    this.getPlayers = function() {
+      const players = [];
+      for (const player of table.players) {
+        players.push(player); 
+      }
+      return players;
+    }
+
+    this.drawCard = function(cardId, destination) {
+      
     }
     
   }
