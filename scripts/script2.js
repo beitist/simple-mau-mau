@@ -26,40 +26,65 @@ let cardsPerPlayer = 5;
 
 let gameGoesClockwise = true;
 
-// Model
+/**
+ * Table - players [human, opponents]
+ *       - decks [draw, discard]
+ *               - cards
+ */
 class Table {
   constructor() {
-    const players = [];
+    this.players = [];
+    this.nextPlayer = NULL;
+
+    this.drawDeck = new DrawDeck();
+    this.discardPile = new DiscardPile();
   }
 }
 
 class Player {
-  constructor() {
+  constructor(id) {
     this.hand = {};
-    this.addCardToHand = function (card) {
-      this.hand.push(card);
-    }
-    this.removeCardFromHand = function (cardId) {
+    this.id = id;
 
-    }
   }
 }
 
 class Human extends Player {
   constructor() {
-
+    this.isHuman = true;
   }
 }
 
 class Opponent extends Player {
   constructor() {
-
+    this.isHuman = false;
   }
 }
 
-class Pile {
+class Deck {
   constructor() {
     this.cards = [];
+  }
+}
+
+class DrawDeck extends Deck {
+  constructor() {
+    const CARD_COLORS = ['diamond', 'heart', 'spades', 'club'];
+    const CARD_VALUES = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    for (const color of CARD_COLORS) {
+      for (const cardValue of CARD_VALUES) {
+        const card = new Card(color, cardValue);
+        this.cards.push(card);
+      }
+    }
+
+    this.showCardFace = false;
+
+}
+
+class DiscardPile extends Deck {
+  constructor() {
+    this.showCardFace = true;
   }
 }
 
