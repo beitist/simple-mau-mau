@@ -129,18 +129,37 @@ class View {
       const decks = game.getDecks();
       if (decks.discardPileCards.length > 0) {
         const lastCardOnDiscardPile = decks.discardPileCards[decks.discardPileCards.length-1];
-        const renderedCard = this.renderCard(lastCardOnDiscardPile, true);
+        const renderedCard = this.renderCard(lastCardOnDiscardPile);
         this.discardPileNode.appendChild(renderedCard);
       } else {
         // do nothing?
       }
 
+      if (decks.drawDeckCards.length > 0) {
+        const lastCardOnDrawDeck = decks.drawDeckCards[decks.drawDeckCards.length-1];
+        const renderedCard = this.renderCard(lastCardOnDrawDeck);
+        this.drawDeckNode.appendChild(renderedCard);
+      } else {
+        // do nothing?
+      }
+
+
     }
 
-    this.renderCard = function(card, frontFace = true) {
-      
-    }
+    this.renderCard = function(card, frontFace = true, addEvent = false) {
+      let imageNode = document.createElement('img');
+      imageNode.width = '60';
+      imageNode.classList.add('card');
+      imageNode.id = card.uniqueID;
 
+      if (frontFace) {
+        imageNode.src = card.imageSrc;
+      } else { 
+        imageNode.src = BACK_OF_CARD_IMAGE_SRC;
+      }
+
+      return imageNode;
+    }
 
   }
 }
@@ -148,20 +167,7 @@ class View {
 
 
 
-let imageNode = document.createElement('img');
-imageNode.src =
-  PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
-imageNode.width = '60';
-imageNode.classList.add('card');
-imageNode.id = cardValue + color[0].toUpperCase();
 
-let backImageNode = document.createElement('img');
-backImageNode.src = BACK_OF_CARD_IMAGE_SRC;
-backImageNode.classList.add('card');
-backImageNode.id = cardValue + color[0].toUpperCase();
-
-this.cardImageNode = imageNode;
-this.backImageNode = backImageNode;
 
 
 // Controller
