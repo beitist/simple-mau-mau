@@ -200,16 +200,15 @@ class View {
   }
 }
 
-
-
-
-
-
-
 // Controller
 class Game {
   constructor() {
-    // some init stuff to start
+    this.newGame = function() {
+      table = new Table();
+      view = new View();
+      this.createPlayers();
+      this.shuffleDeck();
+    }
 
     this.createPlayers = function() {
       for (let i = 0; i < totalNumberOfPlayers; i++) {
@@ -258,6 +257,38 @@ class Game {
 
       this.updateDeckView();
       this.updatePlayerView();
+    }
+
+    this.shuffleDeck = function() {
+      const decks = this.getDecks();
+      let tempPile = [];
+
+      if (decks.discardPileCards.length == 0) {
+        decks.drawDeckCards.forEach(function (card) {
+          tempPile.push(card);
+        });
+        table.drawDeck.cards = [];
+      } else if (decks.drawPileCards.length == 0 && decks.discardPileCards.length > 0) {
+        const topCard = this.getTopCardFromDiscardPile();
+        decks.discardPileCards.forEach(function (card) {
+          tempPile.push(card);
+        });
+        table.discardPile.cards = [];
+        table.discardPile.cards.push(topCard);
+      }
+
+      for (let i = tempPile.length; i > 0; i--) {
+        const randomPileIndex = Math.floor(Math.random() * i);
+        table.drawDeck.cards.push(tempPile[randomPileIndex]);
+        tempPile.splice(randomPileIndex, 1);
+      }
+
+      table.drawDeck.cards.reverse();
+
+    };
+
+    this.getTopCardFromDiscardPile = function() {
+      return table.discardPile.cards[table.discardPile.length - 1];
     }
     
   }
