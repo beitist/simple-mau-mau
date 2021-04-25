@@ -34,8 +34,6 @@ let gameGoesClockwise = true;
 class Table {
   constructor() {
     this.players = [];
-    this.nextPlayer = NULL;
-
     this.drawDeck = new DrawDeck();
     this.discardPile = new DiscardPile();
   }
@@ -43,19 +41,21 @@ class Table {
 
 class Player {
   constructor(id) {
-    this.hand = [];
+    this.cards = [];
     this.id = id;
   }
 }
 
 class Human extends Player {
   constructor() {
+    super();
     this.isHuman = true;
   }
 }
 
 class Opponent extends Player {
   constructor() {
+    super();
     this.isHuman = false;
   }
 }
@@ -68,6 +68,7 @@ class Deck {
 
 class DrawDeck extends Deck {
   constructor() {
+    super();
     const CARD_COLORS = ['diamond', 'heart', 'spades', 'club'];
     const CARD_VALUES = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
     for (const color of CARD_COLORS) {
@@ -84,6 +85,7 @@ class DrawDeck extends Deck {
 
 class DiscardPile extends Deck {
   constructor() {
+    super();
     this.showCardFace = true;
   }
 }
@@ -158,7 +160,7 @@ class View {
         playerCardsNode.classList.add('player-cards');
         playerCardsNode.id = 'player' + player.id;
 
-        for (const card of player.hand) {
+        for (const card of player.cards) {
           const cardNode = this.renderCard(card, isHuman, isHuman, isHuman);
           playerCardsNode.appendChild(cardNode);
         }
@@ -187,9 +189,9 @@ class View {
       if (addEvent) {
         cardNode.addEventListener('click', (function(idCopy, eventAttachedToHumanCopy) { return function() {
           if (eventAttachedToHumanCopy) {
-            controller.playCard(idCopy, 0);
+            game.playCard(idCopy, 0);
           } else {
-            controller.dealCard(idCopy, 0);
+            game.drawCard(idCopy, 0);
           }
         }})(card.uniqueID, eventAttachedToHuman));
       }
@@ -208,25 +210,29 @@ class Game {
       view = new View();
       this.createPlayers();
       this.shuffleDeck();
+      view.updateDeckView();
+      view.updatePlayerView();
     }
 
     this.createPlayers = function() {
       for (let i = 0; i < totalNumberOfPlayers; i++) {
+        let player = '';
         if (i == 0) {
-          const player = new Human();
+          player = new Human();
         } else {
-          const player = new Opponent();
+          player = new Opponent();
         }
         player.id = i;
-        table.players.push(player)
+        table.players.push(player);
       }
     }
 
     this.getDecks = function() {
-      return decks = {
+      const decks = {
         drawDeckCards: table.drawDeck.cards,
         discardPileCards: table.discardPile.cards,
       }
+      return decks;
     }
 
     this.getPlayers = function() {
@@ -238,25 +244,26 @@ class Game {
     }
 
     this.drawCard = function(cardId, playerId) {
-      const indexOfCardWithCardId = table.drawDeck.cards.indexOf(cardId);
+      console.log(cardId);
+      const indexOfCardWithCardId = table.drawDeck.cards.findIndex(element => element.uniqueID == cardId);
       const card = table.drawDeck.cards[indexOfCardWithCardId];
 
       table.players[playerId].cards.push(card);
       table.drawDeck.cards.splice(indexOfCardWithCardId, 1);
 
-      this.updateDeckView();
-      this.updatePlayerView();
+      view.updateDeckView();
+      view.updatePlayerView();
     }
 
     this.playCard = function(cardId, playerId) {
-      const indexOfCardWithCardId = table.players[playerId].cards.indexOf(cardId);
+      const indexOfCardWithCardId = table.players[playerId].cards.findIndex(element => element.uniqueID == cardId);
       const card = table.players[playerId].cards[indexOfCardWithCardId];
 
       table.discardPile.cards.push(card);
       table.players[playerId].cards.splice(indexOfCardWithCardId, 1);
 
-      this.updateDeckView();
-      this.updatePlayerView();
+      view.updateDeckView();
+      view.updatePlayerView();
     }
 
     this.shuffleDeck = function() {
@@ -294,6 +301,8 @@ class Game {
   }
 }
 
-const table = new Table();
-const view = new View();
+let table = new Table();
+let view = new View();
 const game = new Game();
+
+game.newGame();
