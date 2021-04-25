@@ -192,10 +192,10 @@ class View {
         cardNode.addEventListener('click', (function(idCopy, eventAttachedToHumanCopy) { return function() {
           if (eventAttachedToHumanCopy) {
             game.playCard(idCopy, 0);
-            game.play.next();
           } else {
             game.drawCard(idCopy, 0);
           }
+          game.play.next();
         }})(card.uniqueID, eventAttachedToHuman));
       }
       
@@ -220,6 +220,7 @@ class Game {
       view.updateDeckView();
       view.updatePlayerView();
       game.play = game.playGenerator();
+      game.play.next();
     }
     
     this.createPlayers = function() {
@@ -260,6 +261,7 @@ class Game {
           player.cards.push(table.drawDeck.cards.pop());
         }
       }
+      table.discardPile.cards.push(table.drawDeck.cards.pop());
     }
     
     this.drawCard = function(cardId, playerId) {
@@ -319,9 +321,10 @@ class Game {
       while (!table.hasWinner) {
         if (table.players[table.currentPlayer].isHuman) {
           game.setNextPlayer();
+          while ()
           yield;
         } else {
-          game.performPlayerAction(table.currentPlayer);
+          game.performOpponentAction(table.currentPlayer);
           game.setNextPlayer();
         }
         game.checkIfWeHaveAWinner();
@@ -338,7 +341,7 @@ class Game {
       }
     }
 
-    this.performPlayerAction = function() {
+    this.performOpponentAction = function() {
       console.log('Opponent should play...');
     }
 
