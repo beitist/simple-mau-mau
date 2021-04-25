@@ -1,4 +1,4 @@
-const MAU_MAU_VERSION = 'dev 0.03';
+const MAU_MAU_VERSION = 'dev 0.1';
 const LOG_DETAILS = true;
 const LOG_DEPTH = 3;
 const SHOW_ALL_CARDS = false;
@@ -195,10 +195,10 @@ class View {
           }
         }})(card.uniqueID, eventAttachedToHuman));
       }
-
+      
       return cardNode;
     }
-
+    
   }
 }
 
@@ -210,10 +210,11 @@ class Game {
       view = new View();
       this.createPlayers();
       this.shuffleDeck();
+      this.dealInitialCards();
       view.updateDeckView();
       view.updatePlayerView();
     }
-
+    
     this.createPlayers = function() {
       for (let i = 0; i < totalNumberOfPlayers; i++) {
         let player = '';
@@ -226,50 +227,11 @@ class Game {
         table.players.push(player);
       }
     }
-
-    this.getDecks = function() {
-      const decks = {
-        drawDeckCards: table.drawDeck.cards,
-        discardPileCards: table.discardPile.cards,
-      }
-      return decks;
-    }
-
-    this.getPlayers = function() {
-      const players = [];
-      for (const player of table.players) {
-        players.push(player); 
-      }
-      return players;
-    }
-
-    this.drawCard = function(cardId, playerId) {
-      console.log(cardId);
-      const indexOfCardWithCardId = table.drawDeck.cards.findIndex(element => element.uniqueID == cardId);
-      const card = table.drawDeck.cards[indexOfCardWithCardId];
-
-      table.players[playerId].cards.push(card);
-      table.drawDeck.cards.splice(indexOfCardWithCardId, 1);
-
-      view.updateDeckView();
-      view.updatePlayerView();
-    }
-
-    this.playCard = function(cardId, playerId) {
-      const indexOfCardWithCardId = table.players[playerId].cards.findIndex(element => element.uniqueID == cardId);
-      const card = table.players[playerId].cards[indexOfCardWithCardId];
-
-      table.discardPile.cards.push(card);
-      table.players[playerId].cards.splice(indexOfCardWithCardId, 1);
-
-      view.updateDeckView();
-      view.updatePlayerView();
-    }
-
+    
     this.shuffleDeck = function() {
       const decks = this.getDecks();
       let tempPile = [];
-
+      
       if (decks.discardPileCards.length == 0) {
         decks.drawDeckCards.forEach(function (card) {
           tempPile.push(card);
@@ -284,16 +246,63 @@ class Game {
         table.discardPile.cards.push(topCard);
       }
 
+    this.dealInitialCards = function() {
+      for (let i = 0; i < cardsPerPlayer; i++) {
+        for (let player of table.players) {
+          console.log('Dealing to player ' + player.id);
+          player.cards.push(table.drawDeck.cards.pop());
+        }
+      }
+    }
+    
+    this.drawCard = function(cardId, playerId) {
+      const indexOfCardWithCardId = table.drawDeck.cards.findIndex(element => element.uniqueID == cardId);
+      const card = table.drawDeck.cards[indexOfCardWithCardId];
+      
+      table.players[playerId].cards.push(card);
+      table.drawDeck.cards.splice(indexOfCardWithCardId, 1);
+      
+      view.updateDeckView();
+      view.updatePlayerView();
+    }
+    
+    this.playCard = function(cardId, playerId) {
+      const indexOfCardWithCardId = table.players[playerId].cards.findIndex(element => element.uniqueID == cardId);
+      const card = table.players[playerId].cards[indexOfCardWithCardId];
+      
+      table.discardPile.cards.push(card);
+      table.players[playerId].cards.splice(indexOfCardWithCardId, 1);
+      
+      view.updateDeckView();
+      view.updatePlayerView();
+    }
+      
       for (let i = tempPile.length; i > 0; i--) {
         const randomPileIndex = Math.floor(Math.random() * i);
         table.drawDeck.cards.push(tempPile[randomPileIndex]);
         tempPile.splice(randomPileIndex, 1);
       }
-
+      
       table.drawDeck.cards.reverse();
-
+      
     };
-
+    
+        this.getDecks = function() {
+          const decks = {
+            drawDeckCards: table.drawDeck.cards,
+            discardPileCards: table.discardPile.cards,
+          }
+          return decks;
+        }
+    
+        this.getPlayers = function() {
+          const players = [];
+          for (const player of table.players) {
+            players.push(player); 
+          }
+          return players;
+        }
+    
     this.getTopCardFromDiscardPile = function() {
       return table.discardPile.cards[table.discardPile.length - 1];
     }
