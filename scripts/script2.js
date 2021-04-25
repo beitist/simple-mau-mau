@@ -7,9 +7,6 @@ const CSS_NOT_DONE_YET = true;
 
 const PATH_TO_CARD_IMAGES = 'img/png/';
 const BACK_OF_CARD_IMAGE_SRC = 'img/png/red_back.png';
-let BACK_OF_CARD_IMG_NODE = document.createElement('img');
-BACK_OF_CARD_IMG_NODE.src = BACK_OF_CARD_IMAGE_SRC;
-BACK_OF_CARD_IMG_NODE.classList.add = 'card';
 
 const newGameButton = document.getElementById('button-new-game');
 const undoButton = document.getElementById('button-undo');
@@ -17,8 +14,11 @@ const topTenButton = document.getElementById('button-top-ten');
 
 const versionElement = document.getElementById('header-version');
 
-const opponentsNode = document.getElementById('opponents');
-const discardPileNode = document.getElementById('discard-pile');
+const OPPONENTS_NODE = document.getElementById('opponents');
+const HUMAN_NODE = document.getElementById('player');
+
+const DISCARD_PILE_NODE = document.getElementById('discard-pile');
+const DRAW_DECK_NODE = document.getElementById('draw-deck');
 
 // totalNumberOfPlayers wird später variabel gesetzt (ab V 1.1)!
 let totalNumberOfPlayers = 3;
@@ -43,9 +43,8 @@ class Table {
 
 class Player {
   constructor(id) {
-    this.hand = {};
+    this.hand = [];
     this.id = id;
-
   }
 }
 
@@ -80,6 +79,7 @@ class DrawDeck extends Deck {
 
     this.showCardFace = false;
 
+  }
 }
 
 class DiscardPile extends Deck {
@@ -89,7 +89,7 @@ class DiscardPile extends Deck {
 }
 
 class Card {
-  constructor(color, value) {
+  constructor(color, cardValue) {
     this.value = cardValue;
     this.color = color;
     this.currentOwner = 'deck';
@@ -108,20 +108,6 @@ class Card {
       PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
     this.uniqueID = cardValue + color[0].toUpperCase();
 
-    let imageNode = document.createElement('img');
-    imageNode.src =
-      PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
-    imageNode.width = '60';
-    imageNode.classList.add('card');
-    imageNode.id = cardValue + color[0].toUpperCase();
-
-    let backImageNode = document.createElement('img');
-    backImageNode.src = BACK_OF_CARD_IMAGE_SRC;
-    backImageNode.classList.add('card');
-    backImageNode.id = cardValue + color[0].toUpperCase();
-
-    this.cardImageNode = imageNode;
-    this.backImageNode = backImageNode;
   }
 }
 
@@ -131,29 +117,64 @@ class View {
   constructor() {
     this.opponentNodes = [];
     this.humanNodes = [];
-}
-}
+    this.discardPileNode = DISCARD_PILE_NODE;
+    this.drawDeckNode = DRAW_DECK_NODE;
+    this.opponentsNode = OPPONENTS_NODE;
+    this.humanNode = HUMAN_NODE;
 
-class HumanView {
-  constructor(id) {
-    this.id = id;
+    this.updateDeckView = function() {
+      this.discardPileNode.innerHTML = '';
+      this.drawDeckNode.innerHTML = '';
 
-    this.cardsNode = 
+      const decks = game.getDecks();
+      if (decks.discardPileCards.length > 0) {
+        const lastCardOnDiscardPile = decks.discardPileCards[decks.discardPileCards.length-1];
+        const renderedCard = this.renderCard(lastCardOnDiscardPile, true);
+        this.discardPileNode.appendChild(renderedCard);
+      } else {
+        // do nothing?
+      }
+
+    }
+
+    this.renderCard = function(card, frontFace = true) {
+      
+    }
+
+
   }
 }
 
-class OpponentView {
-  constructor() {
 
-  }
-}
+
+
+let imageNode = document.createElement('img');
+imageNode.src =
+  PATH_TO_CARD_IMAGES + cardValue + color[0].toUpperCase() + '.png';
+imageNode.width = '60';
+imageNode.classList.add('card');
+imageNode.id = cardValue + color[0].toUpperCase();
+
+let backImageNode = document.createElement('img');
+backImageNode.src = BACK_OF_CARD_IMAGE_SRC;
+backImageNode.classList.add('card');
+backImageNode.id = cardValue + color[0].toUpperCase();
+
+this.cardImageNode = imageNode;
+this.backImageNode = backImageNode;
 
 
 // Controller
 class Game {
   constructor() {
-    this.PlayerController = new PlayerController();
-    this.OpponentController = new OpponentController();
+    // some init stuff to start
+
+    this.getDecks = function() {
+      return decks = {
+        drawDeckCards: table.drawDeck.cards,
+        discardPileCards: table.discardPile.cards,
+    }
+    
   }
 }
 
