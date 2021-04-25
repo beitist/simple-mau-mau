@@ -115,8 +115,6 @@ class Card {
 // View
 class View {
   constructor() {
-    this.opponentNodes = [];
-    this.humanNodes = [];
     this.discardPileNode = DISCARD_PILE_NODE;
     this.drawDeckNode = DRAW_DECK_NODE;
     this.opponentsNode = OPPONENTS_NODE;
@@ -143,6 +141,9 @@ class View {
         // do nothing?
       }
 
+    }
+
+    this.updatePlayerView = function(playerId) {
 
     }
 
@@ -174,6 +175,18 @@ class View {
 class Game {
   constructor() {
     // some init stuff to start
+
+    this.createPlayers = function() {
+      for (let i = 0; i < totalNumberOfPlayers; i++) {
+        if (i == 0) {
+          const player = new Human();
+        } else {
+          const player = new Opponent();
+        }
+        player.id = i;
+        table.players.push(player)
+      }
+    }
 
     this.getDecks = function() {
       return decks = {
