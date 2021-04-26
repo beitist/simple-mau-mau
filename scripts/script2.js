@@ -26,12 +26,27 @@ let cardsPerPlayer = 5;
 
 let gameGoesClockwise = true;
 
+
+const logEntry = function(text, reportingLevel = 1) {
+  if (LOG_DETAILS && reportingLevel <=) {
+
+  }
+}
+
+
 /**
  * Table - players [human, opponents]
  *       - decks [draw, discard]
  *               - cards
  */
 class Table {
+  players;
+  drawDeck;
+  discardPile;
+  hasWinner;
+  currentPlayer;
+  totalNumberOfMoves;
+
   constructor() {
     this.players = [];
     this.drawDeck = new DrawDeck();
@@ -43,6 +58,9 @@ class Table {
 }
 
 class Player {
+  cards;
+  id;
+
   constructor(id) {
     this.cards = [];
     this.id = id;
@@ -50,6 +68,8 @@ class Player {
 }
 
 class Human extends Player {
+  isHuman;
+
   constructor() {
     super();
     this.isHuman = true;
@@ -57,6 +77,8 @@ class Human extends Player {
 }
 
 class Opponent extends Player {
+  isHuman;
+
   constructor() {
     super();
     this.isHuman = false;
@@ -64,12 +86,16 @@ class Opponent extends Player {
 }
 
 class Deck {
+  cards;
+
   constructor() {
     this.cards = [];
   }
 }
 
 class DrawDeck extends Deck {
+  showCardFace;
+  
   constructor() {
     super();
     const CARD_COLORS = ['diamond', 'heart', 'spades', 'club'];
@@ -80,10 +106,9 @@ class DrawDeck extends Deck {
         this.cards.push(card);
       }
     }
-
     this.showCardFace = false;
-
   }
+
 }
 
 class DiscardPile extends Deck {
@@ -119,287 +144,290 @@ class Card {
 // View
 class View {
   constructor() {
-    this.discardPileNode = DISCARD_PILE_NODE;
-    this.drawDeckNode = DRAW_DECK_NODE;
-    this.opponentsNode = OPPONENTS_NODE;
-    this.humanNode = HUMAN_NODE;
+  }
 
-    this.updateDeckView = function() {
-      this.discardPileNode.innerHTML = '';
-      this.drawDeckNode.innerHTML = '';
+  discardPileNode = DISCARD_PILE_NODE;
+  drawDeckNode = DRAW_DECK_NODE;
+  opponentsNode = OPPONENTS_NODE;
+  humanNode = HUMAN_NODE;
 
-      const decks = game.getDecks();
-      if (decks.discardPileCards.length > 0) {
-        const lastCardOnDiscardPile = decks.discardPileCards[decks.discardPileCards.length-1];
-        const renderedCard = this.renderCard(lastCardOnDiscardPile, true, false, false);
-        this.discardPileNode.appendChild(renderedCard);
-      } else {
-        // do nothing?
+
+  updateDeckView = function() {
+    this.discardPileNode.innerHTML = '';
+    this.drawDeckNode.innerHTML = '';
+
+    const decks = game.getDecks();
+    if (decks.discardPileCards.length > 0) {
+      const lastCardOnDiscardPile = decks.discardPileCards[decks.discardPileCards.length-1];
+      const renderedCard = view.renderCard(lastCardOnDiscardPile, true, false, false);
+      this.discardPileNode.appendChild(renderedCard);
+    } else {
+      // do nothing?
+    }
+
+    if (decks.drawDeckCards.length > 0) {
+      const lastCardOnDrawDeck = decks.drawDeckCards[decks.drawDeckCards.length-1];
+      const renderedCard = view.renderCard(lastCardOnDrawDeck, false, true, false);
+      this.drawDeckNode.appendChild(renderedCard);
+    } else {
+      // do nothing?
+    }
+
+  }
+
+  updatePlayerView = function() {
+    const players = game.getPlayers();
+    const humanNode = HUMAN_NODE;
+    const opponentsNode = OPPONENTS_NODE;
+
+    humanNode.innerHTML = '';
+    opponentsNode.innerHTML = '';
+
+    for (const player of players) {
+      const isHuman = player.isHuman;
+
+      let playerCardsNode = document.createElement('div');
+      playerCardsNode.classList.add('player-cards');
+      playerCardsNode.id = 'player' + player.id;
+
+      for (const card of player.cards) {
+        const cardNode = view.renderCard(card, isHuman, isHuman, isHuman);
+        playerCardsNode.appendChild(cardNode);
       }
 
-      if (decks.drawDeckCards.length > 0) {
-        const lastCardOnDrawDeck = decks.drawDeckCards[decks.drawDeckCards.length-1];
-        const renderedCard = this.renderCard(lastCardOnDrawDeck, false, true, false);
-        this.drawDeckNode.appendChild(renderedCard);
+      if (isHuman) {
+        humanNode.appendChild(playerCardsNode);
       } else {
-        // do nothing?
+        opponentsNode.appendChild(playerCardsNode);
       }
 
     }
+  }
 
-    this.updatePlayerView = function() {
-      const players = game.getPlayers();
-      const humanNode = HUMAN_NODE;
-      const opponentsNode = OPPONENTS_NODE;
+  renderCard = function(card, frontFace = true, addEvent = false, eventAttachedToHuman = false) {
+    let cardNode = document.createElement('img');
+    cardNode.width = '60';
+    cardNode.classList.add('card');
+    cardNode.id = card.uniqueID;
 
-      humanNode.innerHTML = '';
-      opponentsNode.innerHTML = '';
+    if (frontFace) {
+      cardNode.src = card.imageSrc;
+    } else { 
+      cardNode.src = BACK_OF_CARD_IMAGE_SRC;
+    }
 
-      for (const player of players) {
-        const isHuman = player.isHuman;
-
-        let playerCardsNode = document.createElement('div');
-        playerCardsNode.classList.add('player-cards');
-        playerCardsNode.id = 'player' + player.id;
-
-        for (const card of player.cards) {
-          const cardNode = this.renderCard(card, isHuman, isHuman, isHuman);
-          playerCardsNode.appendChild(cardNode);
-        }
-
-        if (isHuman) {
-          humanNode.appendChild(playerCardsNode);
+    if (addEvent) {
+      cardNode.addEventListener('click', (function(idCopy, eventAttachedToHumanCopy) { return function() {
+        if (eventAttachedToHumanCopy) {
+          game.playCard(idCopy, 0);
         } else {
-          opponentsNode.appendChild(playerCardsNode);
+          game.drawCard(idCopy, 0);
         }
-
-      }
-    }
-
-    this.renderCard = function(card, frontFace = true, addEvent = false, eventAttachedToHuman = false) {
-      let cardNode = document.createElement('img');
-      cardNode.width = '60';
-      cardNode.classList.add('card');
-      cardNode.id = card.uniqueID;
-
-      if (frontFace) {
-        cardNode.src = card.imageSrc;
-      } else { 
-        cardNode.src = BACK_OF_CARD_IMAGE_SRC;
-      }
-
-      if (addEvent) {
-        cardNode.addEventListener('click', (function(idCopy, eventAttachedToHumanCopy) { return function() {
-          if (eventAttachedToHumanCopy) {
-            game.playCard(idCopy, 0);
-          } else {
-            game.drawCard(idCopy, 0);
-          }
-          game.play.next();
-        }})(card.uniqueID, eventAttachedToHuman));
-      }
-      
-      return cardNode;
+        game.play.next();
+      }})(card.uniqueID, eventAttachedToHuman));
     }
     
-  }
+    return cardNode;
+  };
+    
 }
 
 // Controller
 class Game {
   constructor() {
-
     this.play = '';
+  }
 
-    this.newGame = function() {
-      table = new Table();
-      view = new View();
-      game.createPlayers();
-      game.shuffleDeck();
-      game.dealInitialCards();
-      view.updateDeckView();
-      view.updatePlayerView();
-      game.play = game.playGenerator();
-      game.play.next();
-    }
-    
-    this.createPlayers = function() {
-      for (let i = 0; i < totalNumberOfPlayers; i++) {
-        let player = '';
-        if (i == 0) {
-          player = new Human();
-        } else {
-          player = new Opponent();
-        }
-        player.id = i;
-        table.players.push(player);
-      }
-    }
-    
-    this.shuffleDeck = function() {
-      const decks = this.getDecks();
-      let tempPile = [];
-      
-      if (decks.discardPileCards.length == 0) {
-        decks.drawDeckCards.forEach(function (card) {
-          tempPile.push(card);
-        });
-        table.drawDeck.cards = [];
-      } else if (decks.drawPileCards.length == 0 && decks.discardPileCards.length > 0) {
-        const topCard = this.getTopCardFromDiscardPile();
-        decks.discardPileCards.forEach(function (card) {
-          tempPile.push(card);
-        });
-        table.discardPile.cards = [];
-        table.discardPile.cards.push(topCard);
-      }
-
-      for (let i = tempPile.length; i > 0; i--) {
-        const randomPileIndex = Math.floor(Math.random() * i);
-        table.drawDeck.cards.push(tempPile[randomPileIndex]);
-        tempPile.splice(randomPileIndex, 1);
-      }
-      
-      table.drawDeck.cards.reverse();    
-      
-    };
-
-    this.dealInitialCards = function() {
-      for (let i = 0; i < cardsPerPlayer; i++) {
-        for (let player of table.players) {
-          console.log('Dealing to player ' + player.id);
-          player.cards.push(table.drawDeck.cards.pop());
-        }
-      }
-      table.discardPile.cards.push(table.drawDeck.cards.pop());
-    }
-    
-    this.drawCard = function(cardId, playerId) {
-      const indexOfCardWithCardId = table.drawDeck.cards.findIndex(element => element.uniqueID == cardId);
-      const card = table.drawDeck.cards[indexOfCardWithCardId];
-      
-      table.players[playerId].cards.push(card);
-      table.drawDeck.cards.splice(indexOfCardWithCardId, 1);
-      
-      view.updateDeckView();
-      view.updatePlayerView();
-
-      return card;
-    }
-    
-    this.playCard = function(cardId, playerId) {
-      const indexOfCardWithCardId = table.players[playerId].cards.findIndex(element => element.uniqueID == cardId);
-      const card = table.players[playerId].cards[indexOfCardWithCardId];
-      console.log('inside game.playCard: ' + card.uniqueID + ' player: ' + playerId);
-      
-      table.discardPile.cards.push(card);
-      table.players[playerId].cards.splice(indexOfCardWithCardId, 1);
-      
-      view.updateDeckView();
-      view.updatePlayerView();
-    }
-    
-    this.getDecks = function() {
-      const decks = {
-        drawDeckCards: table.drawDeck.cards,
-        discardPileCards: table.discardPile.cards,
-      }
-      return decks;
-    }
-    
-    this.getPlayers = function() {
-      const players = [];
-      for (const player of table.players) {
-        players.push(player); 
-      }
-      return players;
-    }
-    
-    this.getTopCardFromDiscardPile = function() {
-      return table.discardPile.cards[table.discardPile.length - 1];
-    }
-
-    this.playGenerator = function*() {
-      while (!table.hasWinner) {
-        if (table.players[table.currentPlayer].isHuman) {
-          game.setNextPlayer();
-          yield;
-        } else {
-          game.performOpponentAction(table.currentPlayer);
-          game.setNextPlayer();
-        }
-        game.checkIfWeHaveAWinner();
-        table.totalNumberOfMoves++;
-        console.log('Generator, move #' + table.totalNumberOfMoves);
-      }
-    }
-
-    this.setNextPlayer = function() {
-      if (table.currentPlayer < (table.players.length - 1)) {
-        table.currentPlayer++;
+  newGame = function() {
+    table = new Table();
+    view = new View();
+    game.createPlayers();
+    game.shuffleDeck();
+    game.dealInitialCards();
+    view.updateDeckView();
+    view.updatePlayerView();
+    game.play = game.playGenerator();
+    game.play.next();
+  }
+  
+  createPlayers = function() {
+    for (let i = 0; i < totalNumberOfPlayers; i++) {
+      let player = '';
+      if (i == 0) {
+        player = new Human();
       } else {
-        table.currentPlayer = 0;
+        player = new Opponent();
       }
+      player.id = i;
+      table.players.push(player);
+    }
+  }
+  
+  shuffleDeck = function() {
+    const decks = this.getDecks();
+    let tempPile = [];
+    
+    if (decks.discardPileCards.length == 0) {
+      decks.drawDeckCards.forEach(function (card) {
+        tempPile.push(card);
+      });
+      table.drawDeck.cards = [];
+    } else if (decks.drawPileCards.length == 0 && decks.discardPileCards.length > 0) {
+      const topCard = this.getTopCardFromDiscardPile();
+      decks.discardPileCards.forEach(function (card) {
+        tempPile.push(card);
+      });
+      table.discardPile.cards = [];
+      table.discardPile.cards.push(topCard);
     }
 
-    this.performOpponentAction = function(playerId) {
-      let cards = table.players[playerId].cards;
-      let playableCards = [];
-      let topCard = table.discardPile.cards[table.discardPile.cards.length - 1];
-      console.log('Inside performOpponentAction for player #' + playerId + ' with ' + cards.length + ' cards');
+    for (let i = tempPile.length; i > 0; i--) {
+      const randomPileIndex = Math.floor(Math.random() * i);
+      table.drawDeck.cards.push(tempPile[randomPileIndex]);
+      tempPile.splice(randomPileIndex, 1);
+    }
+    
+    table.drawDeck.cards.reverse();    
+    
+  };
+
+  dealInitialCards = function() {
+    for (let i = 0; i < cardsPerPlayer; i++) {
+      for (let player of table.players) {
+        console.log('Dealing to player ' + player.id);
+        player.cards.push(table.drawDeck.cards.pop());
+      }
+    }
+    table.discardPile.cards.push(table.drawDeck.cards.pop());
+  }
+  
+  drawCard = function(cardId, playerId) {
+    const indexOfCardWithCardId = table.drawDeck.cards.findIndex(element => element.uniqueID == cardId);
+    const card = table.drawDeck.cards[indexOfCardWithCardId];
+    
+    table.players[playerId].cards.push(card);
+    table.drawDeck.cards.splice(indexOfCardWithCardId, 1);
+    
+    view.updateDeckView();
+    view.updatePlayerView();
+
+    return card;
+  }
+  
+  playCard = function(cardId, playerId) {
+    console.log('game.playCard parameters received: cardId = ' + cardId + ' playerId: ' + playerId);
+    const indexOfCardWithCardId = table.players[playerId].cards.findIndex(element => element.uniqueID == cardId);
+    console.log('inside game.playCard: ' + indexOfCardWithCardId + ' player: ' + playerId);
+    const card = table.players[playerId].cards[indexOfCardWithCardId];
+    
+    table.discardPile.cards.push(card);
+    table.players[playerId].cards.splice(indexOfCardWithCardId, 1);
+    
+    view.updateDeckView();
+    view.updatePlayerView();
+  }
+  
+  getDecks = function() {
+    const decks = {
+      drawDeckCards: table.drawDeck.cards,
+      discardPileCards: table.discardPile.cards,
+    }
+    return decks;
+  }
+  
+  getPlayers = function() {
+    const players = [];
+    for (const player of table.players) {
+      players.push(player); 
+    }
+    return players;
+  }
+  
+  getTopCardFromDiscardPile = function() {
+    return table.discardPile.cards[table.discardPile.cards.length - 1];
+  }
+
+  playGenerator = function*() {
+    while (!table.hasWinner) {
+      if (table.players[table.currentPlayer].isHuman) {
+        game.setNextPlayer();
+        yield;
+      } else {
+        game.performOpponentAction(table.currentPlayer);
+        game.setNextPlayer();
+      }
+      game.checkIfWeHaveAWinner();
+      table.totalNumberOfMoves++;
+      console.log('Generator, move #' + table.totalNumberOfMoves);
+    }
+  }
+
+  setNextPlayer = function() {
+    if (table.currentPlayer < (table.players.length - 1)) {
+      table.currentPlayer++;
+    } else {
+      table.currentPlayer = 0;
+    }
+  }
+
+  performOpponentAction = function(playerId) {
+    let cards = table.players[playerId].cards;
+    let playableCards = [];
+    let topCard = table.discardPile.cards[table.discardPile.cards.length - 1];
+    console.log('Inside performOpponentAction for player #' + playerId + ' with ' + cards.length + ' cards');
+    cards.forEach(function(card) {
+      console.log('inside cards.forEach at card #' + card.uniqueID);
+      if (game.cardCanBePlayed(card)) {
+        playableCards.push(card);
+      }
+      console.log('found a total of ' + playableCards.length + ' cards to play.')
+    })
+    if (playableCards.length == 0) {
+      let drawnCard = game.drawCard(game.getTopCardFromDiscardPile().uniqueID, table.currentPlayer);
+      if (game.cardCanBePlayed(drawnCard))
+      view.updateDeckView;
+      view.updatePlayerView;
+      playableCards = '';
+      cards = table.players[playerId].cards;
       cards.forEach(function(card) {
-        console.log('inside cards.forEach at card #' + card.uniqueID);
         if (game.cardCanBePlayed(card)) {
           playableCards.push(card);
         }
-        console.log('found a total of ' + playableCards.length + ' cards to play.')
       })
-      if (playableCards.length == 0) {
-        let drawnCard = game.drawCard(game.getTopCardFromDiscardPile().uniqueID, table.currentPlayer);
-        if (game.cardCanBePlayed(drawnCard))
-        view.updateDeckView;
-        view.updatePlayerView;
-        playableCards = '';
-        cards = table.players[playerId].cards;
-        cards.forEach(function(card) {
-          if (game.cardCanBePlayed(card)) {
-            playableCards.push(card);
-          }
-        })
-      }
-      if (playableCards.length == 0) {
-        game.setNextPlayer();
-      } else {
-        console.log('Applying lots of strategy....');
-        const randomPileIndex = Math.floor(Math.random() * playableCards.length);
-        game.playCard(randomPileIndex, table.currentPlayer);
-      }
     }
-
-    this.cardCanBePlayed = function(card) {
-      let topCard = table.discardPile.cards[table.discardPile.length - 1];
-      console.log('topcard: ' + topCard.color + topCard.value);
-      console.log('topcard: ' + topCard.uniqueID + ' playerCard: ' + card.uniqueID);
-      if (card.value == 'J' && topCard.value != 'J') {
-        return true;
-      } else if (card.value == topCard.value) {
-        return true;
-      } else if (card.color == topCard.color) {
-        return true;
-      } else {
-        return false;
-      }
+    if (playableCards.length == 0) {
+      game.setNextPlayer();
+    } else {
+      console.log('Applying lots of strategy....');
+      const randomPileIndex = Math.floor(Math.random() * playableCards.length);
+      console.log('Found this random index: ' + randomPileIndex);
+      game.playCard(playableCards[randomPileIndex].uniqueID, table.currentPlayer);
     }
-
-    this.checkIfWeHaveAWinner = function() {
-      console.log('Checking winner');
-    }
-    
   }
+
+  cardCanBePlayed = function(card) {
+    let topCard = game.getTopCardFromDiscardPile();
+    console.log('topcard: ' + topCard.color + topCard.value);
+    console.log('topcard: ' + topCard.uniqueID + ' playerCard: ' + card.uniqueID);
+    if (card.value == 'J' && topCard.value != 'J') {
+      return true;
+    } else if (card.value == topCard.value) {
+      return true;
+    } else if (card.color == topCard.color) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  checkIfWeHaveAWinner = function() {
+    console.log('Checking winner');
+  }
+  
 }
 
-let table = new Table();
-let view = new View();
-const game = new Game();
+var table = new Table();
+var view = new View();
+var game = new Game();
 
 newGameButton.addEventListener('click', game.newGame);
