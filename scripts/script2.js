@@ -217,14 +217,14 @@ class View {
     }
 
     if (addEvent) {
-      cardNode.addEventListener('click', (function(idCopy, eventAttachedToHumanCopy) { return function() {
+      cardNode.addEventListener('click', (function(cardCopy, eventAttachedToHumanCopy) { return function() {
         if (eventAttachedToHumanCopy) {
-          game.playCard(idCopy, 0);
+          game.playCard(cardCopy, 0);
         } else {
-          game.drawCard(idCopy, 0);
+          game.drawCard(cardCopy, 0);
         }
         game.play.next();
-      }})(card.uniqueID, eventAttachedToHuman));
+      }})(card, eventAttachedToHuman));
     }
     
     return cardNode;
@@ -385,7 +385,7 @@ class Game {
       if (game.cardCanBePlayed(drawnCard))
       view.updateDeckView;
       view.updatePlayerView;
-      playableCards = '';
+      playableCards = [];
       cards = table.players[playerId].cards;
       cards.forEach(function(card) {
         if (game.cardCanBePlayed(card)) {
@@ -404,6 +404,7 @@ class Game {
   }
 
   cardCanBePlayed = function(card) {
+    logEntry('Trying game.getTopCardFromDiscardPile()...' + game.getTopCardFromDiscardPile().uniqueID, 1);
     let topCard = game.getTopCardFromDiscardPile();
     console.log('topcard: ' + topCard.color + topCard.value);
     console.log('topcard: ' + topCard.uniqueID + ' playerCard: ' + card.uniqueID);
