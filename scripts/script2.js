@@ -269,6 +269,11 @@ class View {
 class Game {
   constructor() {
     this.play = '';
+    this.responseRequired = false;
+    this.numberOfCardsToDraw = 0;
+    this.requestedColor = '';
+    this.mau = [];
+    this.eightHasBeenResolved = true;
   }
 
   newGame = function() {
@@ -382,32 +387,46 @@ class Game {
   playGenerator = function*() {
     while (!table.hasWinner) {
       if (table.players[table.currentPlayer].isHuman) {
-        game.setNextPlayer();
         yield;
+        game.setNextPlayer();
       } else {
         game.performOpponentAction(table.currentPlayer);
         game.setNextPlayer();
       }
       game.checkIfWeHaveAWinner();
       table.totalNumberOfMoves++;
-      logEntry('Generator, move #' + table.totalNumberOfMoves);
+      logEntry('Generator, move #' + table.totalNumberOfMoves, 2);
     }
   }
 
   setNextPlayer = function() {
-    if (table.currentPlayer < (table.players.length - 1)) {
-      table.currentPlayer++;
+    if (game.getTopCardFromDiscardPile().value == 8) {
+      if ((table.currentPlayer + 1) < (table.players.length - 1)) {
+        table.currentPlayer += 2;
+      } else if ((table.currentPlayer + 1) == (table.players.length -1)) {
+        table.currentPlayer = 0;
+      } else {
+        table.currentPlayer++;
+      }
     } else {
-      table.currentPlayer = 0;
+      if (table.currentPlayer < (table.players.length - 1)) {
+        table.currentPlayer++;
+      } else {
+        table.currentPlayer = 0;
+      }
     }
   }
 
   performOpponentAction = function(playerId) {
     let cards = table.players[playerId].cards;
     let playableCards = [];
+    if (game.responseRequired) {
+      
+      game.responseRequired = false;
+
+    }
     logEntry('Inside performOpponentAction for player #' + playerId + ' with ' + cards.length + ' cards', 3);
     cards.forEach(function(card) {
-      logEntry('inside cards.forEach at card #' + card.uniqueID, 3);
       if (game.cardCanBePlayed(card)) {
         playableCards.push(card);
       }
@@ -415,25 +434,17 @@ class Game {
     })
     if (playableCards.length == 0) {
       let drawnCard = game.drawCard(game.getTopCardFromDiscardPile(), table.currentPlayer);
-      if (game.cardCanBePlayed(drawnCard))
-      view.updateDeckView;
-      view.updatePlayerView;
-      playableCards = [];
-      cards = table.players[playerId].cards;
-      cards.forEach(function(card) {
-        if (game.cardCanBePlayed(card)) {
-          playableCards.push(card);
-        }
-      })
-    }
-    if (playableCards.length == 0) {
-      game.setNextPlayer();
+      if (game.cardCanBePlayed(drawnCard)) {
+        game.playCard(drawnCard, table.currentPlayer);
+      } 
     } else {
-      logEntry('Applying lots of strategy....');
+      logEntry('Applying lots of strategy.... :)');
       const randomPileIndex = Math.floor(Math.random() * playableCards.length);
       logEntry('Found this random index: ' + randomPileIndex);
       game.playCard(playableCards[randomPileIndex], table.currentPlayer);
     }
+      view.updateDeckView;
+      view.updatePlayerView;
   }
 
   cardCanBePlayed = function(card) {
@@ -458,8 +469,8 @@ class Game {
 }
 
 
-let table = new Table();
-let view = new View();
+let table;
+let view;
 const game = new Game();
 
 newGameButton.addEventListener('click', game.newGame);
