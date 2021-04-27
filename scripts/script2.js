@@ -27,9 +27,9 @@ let cardsPerPlayer = 5;
 let gameGoesClockwise = true;
 
 
-const logEntry = function(text, reportingLevel = 1) {
-  if (LOG_DETAILS && reportingLevel <=) {
-
+const logEntry = function(text, reportingLevel = 1, additionalObject = null, additionalValue = null) {
+  if (LOG_DETAILS && reportingLevel <= LOG_DEPTH) {
+    console.log(text);
   }
 }
 
