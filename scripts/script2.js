@@ -26,13 +26,46 @@ let cardsPerPlayer = 5;
 
 let gameGoesClockwise = true;
 
-
+let objectText = '';
+let objectTextSpacing = '  ';
+  
 const logEntry = function(text, reportingLevel = 1, additionalObject = null, additionalValue = null) {
   if (LOG_DETAILS && reportingLevel <= LOG_DEPTH) {
-    console.log(text);
+    objectText = '';
+    objectTextSpacing = '  ';
+    let valueText = '';
+    if (additionalObject != null) {
+      objectText = '\nObject handed over. Data:\n';
+      additionalObjectText = '';
+      objectText += objectDiver(additionalObject);
+    }
+    if (additionalValue != null) {
+      valueText = '\nAdditional value: ' + additionalValue;
+    }
+    let outputText = text + objectText + valueText;
+    console.log(outputText);
   }
 }
 
+let additionalObjectText = '';
+
+const objectDiver = function(object) {
+  let n = 0;
+  let objectEntries = Object.entries(object);
+  for (const [key, value] of objectEntries) {
+    if (typeof(value) == 'object' || typeof(value) == 'array') {
+      logEntry('Inside typeOf diver!! n=' + n, 3);
+      additionalObjectText = objectTextSpacing + `\nDiving into ${key}\n` 
+      objectTextSpacing = '     ';
+      objectDiver(value);
+      objectTextSpacing  = '  ';
+    } else {
+      additionalObjectText = objectTextSpacing + `Key: ${key} with value: ${value}`
+    }
+    n++;
+  }
+  return additionalObjectText;
+}
 
 /**
  * Table - players [human, opponents]
@@ -294,7 +327,7 @@ class Game {
   dealInitialCards = function() {
     for (let i = 0; i < cardsPerPlayer; i++) {
       for (let player of table.players) {
-        console.log('Dealing to player ' + player.id);
+        logEntry('Dealing to player ' + player.id);
         player.cards.push(table.drawDeck.cards.pop());
       }
     }
@@ -314,9 +347,9 @@ class Game {
   }
   
   playCard = function(card, playerId) {
-    console.log('game.playCard parameters received: cardId = ' + card.uniqueID + ' playerId: ' + playerId);
+    logEntry('game.playCard parameters received: cardId = ' + card.uniqueID + ' playerId: ' + playerId);
     const indexOfCard = table.players[playerId].cards.findIndex(element => element == card);
-    console.log('inside game.playCard: ' + indexOfCard + ' player: ' + playerId);
+    logEntry('inside game.playCard: ' + indexOfCard + ' player: ' + playerId);
     //const card = table.players[playerId].cards[indexOfCard];
     
     table.discardPile.cards.push(card);
@@ -357,7 +390,7 @@ class Game {
       }
       game.checkIfWeHaveAWinner();
       table.totalNumberOfMoves++;
-      console.log('Generator, move #' + table.totalNumberOfMoves);
+      logEntry('Generator, move #' + table.totalNumberOfMoves);
     }
   }
 
@@ -372,13 +405,13 @@ class Game {
   performOpponentAction = function(playerId) {
     let cards = table.players[playerId].cards;
     let playableCards = [];
-    console.log('Inside performOpponentAction for player #' + playerId + ' with ' + cards.length + ' cards');
+    logEntry('Inside performOpponentAction for player #' + playerId + ' with ' + cards.length + ' cards', 3);
     cards.forEach(function(card) {
-      console.log('inside cards.forEach at card #' + card.uniqueID);
+      logEntry('inside cards.forEach at card #' + card.uniqueID, 3);
       if (game.cardCanBePlayed(card)) {
         playableCards.push(card);
       }
-      console.log('found a total of ' + playableCards.length + ' cards to play.')
+      logEntry('found a total of ' + playableCards.length + ' cards to play.', 2, playableCards)
     })
     if (playableCards.length == 0) {
       let drawnCard = game.drawCard(game.getTopCardFromDiscardPile(), table.currentPlayer);
@@ -396,9 +429,9 @@ class Game {
     if (playableCards.length == 0) {
       game.setNextPlayer();
     } else {
-      console.log('Applying lots of strategy....');
+      logEntry('Applying lots of strategy....');
       const randomPileIndex = Math.floor(Math.random() * playableCards.length);
-      console.log('Found this random index: ' + randomPileIndex);
+      logEntry('Found this random index: ' + randomPileIndex);
       game.playCard(playableCards[randomPileIndex], table.currentPlayer);
     }
   }
@@ -406,8 +439,7 @@ class Game {
   cardCanBePlayed = function(card) {
     logEntry('Trying game.getTopCardFromDiscardPile()...' + game.getTopCardFromDiscardPile().uniqueID, 1);
     let topCard = game.getTopCardFromDiscardPile();
-    console.log('topcard: ' + topCard.color + topCard.value);
-    console.log('topcard: ' + topCard.uniqueID + ' playerCard: ' + card.uniqueID);
+    logEntry('topcard: ' + topCard.uniqueID + ' playerCard: ' + card.uniqueID);
     if (card.value == 'J' && topCard.value != 'J') {
       return true;
     } else if (card.value == topCard.value) {
@@ -420,13 +452,14 @@ class Game {
   }
 
   checkIfWeHaveAWinner = function() {
-    console.log('Checking winner');
+    logEntry('Checking winner', 1);
   }
   
 }
 
-var table = new Table();
-var view = new View();
-var game = new Game();
+
+let table = new Table();
+let view = new View();
+const game = new Game();
 
 newGameButton.addEventListener('click', game.newGame);
