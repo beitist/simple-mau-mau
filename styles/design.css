@@ -1,18 +1,16 @@
-h1 {
+body {
   font-family: sans-serif;
+  font-size: 12pt;
+}
+
+h1 {
   font-size: 20pt;
   font-weight: bold;
 }
 
 h4 {
-  font-family: sans-serif;
   font-size: 15pt;
   font-style: italic;
-}
-
-div {
-  font-family: sans-serif;
-  font-size: 12pt;
 }
 
 button {
@@ -23,11 +21,56 @@ button {
   min-width: 100px;
 }
 
+nav, div#piles, div#player, div#player-commands {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+div#opponents {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.player-cards {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.menu-button, .player-button {
+  margin: 10pt;
+}
+
+.deck-wrapper {
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: auto auto;
+  column-gap: 10pt;
+  row-gap: 8pt;
+  margin-left: 5pt;
+  margin-right: 5pt;
+}
+
+.deck {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.deck-sub {
+  grid-column: 1;
+  grid-row: 2;
+}
+
 #piles {
   min-width: 40%;
 }
 
-#draw-pile, #discard-pile {
+#draw-deck, #discard-pile {
   float: left;
   border-radius: 12px;
   border: 1px solid black;
@@ -40,4 +83,5 @@ button {
 .card {
   width: 100%;
   max-width: 80px;
+  margin: 5pt;
 }
