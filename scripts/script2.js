@@ -301,12 +301,11 @@ class Game {
     table.discardPile.cards.push(table.drawDeck.cards.pop());
   }
   
-  drawCard = function(cardId, playerId) {
-    const indexOfCardWithCardId = table.drawDeck.cards.findIndex(element => element.uniqueID == cardId);
-    const card = table.drawDeck.cards[indexOfCardWithCardId];
+  drawCard = function(card, playerId) {
+    const indexOfCard = table.drawDeck.cards.findIndex(element => element == card);
     
     table.players[playerId].cards.push(card);
-    table.drawDeck.cards.splice(indexOfCardWithCardId, 1);
+    table.drawDeck.cards.splice(indexOfCard, 1);
     
     view.updateDeckView();
     view.updatePlayerView();
@@ -314,14 +313,14 @@ class Game {
     return card;
   }
   
-  playCard = function(cardId, playerId) {
-    console.log('game.playCard parameters received: cardId = ' + cardId + ' playerId: ' + playerId);
-    const indexOfCardWithCardId = table.players[playerId].cards.findIndex(element => element.uniqueID == cardId);
-    console.log('inside game.playCard: ' + indexOfCardWithCardId + ' player: ' + playerId);
-    const card = table.players[playerId].cards[indexOfCardWithCardId];
+  playCard = function(card, playerId) {
+    console.log('game.playCard parameters received: cardId = ' + card.uniqueID + ' playerId: ' + playerId);
+    const indexOfCard = table.players[playerId].cards.findIndex(element => element == card);
+    console.log('inside game.playCard: ' + indexOfCard + ' player: ' + playerId);
+    //const card = table.players[playerId].cards[indexOfCard];
     
     table.discardPile.cards.push(card);
-    table.players[playerId].cards.splice(indexOfCardWithCardId, 1);
+    table.players[playerId].cards.splice(indexOfCard, 1);
     
     view.updateDeckView();
     view.updatePlayerView();
@@ -373,7 +372,6 @@ class Game {
   performOpponentAction = function(playerId) {
     let cards = table.players[playerId].cards;
     let playableCards = [];
-    let topCard = table.discardPile.cards[table.discardPile.cards.length - 1];
     console.log('Inside performOpponentAction for player #' + playerId + ' with ' + cards.length + ' cards');
     cards.forEach(function(card) {
       console.log('inside cards.forEach at card #' + card.uniqueID);
@@ -383,7 +381,7 @@ class Game {
       console.log('found a total of ' + playableCards.length + ' cards to play.')
     })
     if (playableCards.length == 0) {
-      let drawnCard = game.drawCard(game.getTopCardFromDiscardPile().uniqueID, table.currentPlayer);
+      let drawnCard = game.drawCard(game.getTopCardFromDiscardPile(), table.currentPlayer);
       if (game.cardCanBePlayed(drawnCard))
       view.updateDeckView;
       view.updatePlayerView;
@@ -401,7 +399,7 @@ class Game {
       console.log('Applying lots of strategy....');
       const randomPileIndex = Math.floor(Math.random() * playableCards.length);
       console.log('Found this random index: ' + randomPileIndex);
-      game.playCard(playableCards[randomPileIndex].uniqueID, table.currentPlayer);
+      game.playCard(playableCards[randomPileIndex], table.currentPlayer);
     }
   }
 
