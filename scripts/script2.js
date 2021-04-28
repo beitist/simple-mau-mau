@@ -1,4 +1,4 @@
-const MAU_MAU_VERSION = 'dev 0.1';
+const MAU_MAU_VERSION = 'dev 0.03';
 const LOG_DETAILS = true;
 const LOG_DEPTH = 3;
 const SHOW_ALL_CARDS = false;
@@ -386,6 +386,7 @@ class Game {
 
   playGenerator = function*() {
     while (!table.hasWinner) {
+      game.preMoveConditions();
       if (table.players[table.currentPlayer].isHuman) {
         yield;
         game.setNextPlayer();
@@ -393,22 +394,47 @@ class Game {
         game.performOpponentAction(table.currentPlayer);
         game.setNextPlayer();
       }
+      game.postMoveConditions();
       game.checkIfWeHaveAWinner();
       table.totalNumberOfMoves++;
       logEntry('Generator, move #' + table.totalNumberOfMoves, 2);
     }
   }
 
-  setNextPlayer = function() {
-    if (game.getTopCardFromDiscardPile().value == 8) {
-      if ((table.currentPlayer + 1) < (table.players.length - 1)) {
-        table.currentPlayer += 2;
-      } else if ((table.currentPlayer + 1) == (table.players.length -1)) {
-        table.currentPlayer = 0;
+  preMoveConditions = function() {
+    let lastPlayedCard = game.getTopCardFromDiscardPile();
+    if (lastPlayedCard.value == 8) {
+      game.setNextPlayer();
+    }
+    if (lastPlayedCard.value == 7) {
+      game.numberOfCardsToDraw += 2;
+      if (game.playerWantsToExtendSeven()) {
+        game.numberOfCardsToDraw += 2;
+        game.setNextPlayer();
       } else {
-        table.currentPlayer++;
+        for (let i = 0; i < game.numberOfCardsToDraw; i++) {
+          game.drawCard(game.getTopCardFromDiscardPile(), table.currentPlayer)
+        }
       }
-    } else {
+
+    }
+  }
+
+  playerWantsToExtendSeven = function() {
+    let cards = table.players[table.currentPlayer].cards;
+    let indexOfSeven = cards.findIndex(card => card.value == 7);
+    if (indexOfSeven >= 0 && !table.currentPlayer.isHuman) {
+      game.playCard(table.players[playerId].cards[indexOfSeven], table.currentPlayer);
+      game.numberOfCardsToDraw += 2;
+      return true;
+    } else if (indexOfSeven >= 0 && table.currentPlayer.isHuman) {
+      // show modal
+      return true;
+    }
+    return false;
+  }
+
+  setNextPlayer = function() {
       if (table.currentPlayer < (table.players.length - 1)) {
         table.currentPlayer++;
       } else {
