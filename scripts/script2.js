@@ -16,9 +16,13 @@ const versionElement = document.getElementById('header-version');
 
 const OPPONENTS_NODE = document.getElementById('opponents');
 const HUMAN_NODE = document.getElementById('player');
-
 const DISCARD_PILE_NODE = document.getElementById('discard-pile');
 const DRAW_DECK_NODE = document.getElementById('draw-deck');
+
+const MODAL_OVERLAY = document.getElementById('modal-overlay');
+const EXTEND_SEVEN_MODAL = document.getElementById('extend-seven-modal');
+const EXTEND_SEVEN_YES = document.getElementById('extend-seven-yes');
+const EXTEND_SEVEN_NO = document.getElementById('extend-seven-no');
 
 // totalNumberOfPlayers wird später variabel gesetzt (ab V 1.1)!
 let totalNumberOfPlayers = 3;
@@ -262,6 +266,11 @@ class View {
     
     return cardNode;
   };
+
+  toggleSevenModal = function() {
+    MODAL_OVERLAY.classList.toggle('closed');
+    EXTEND_SEVEN_MODAL.classList.toggle('closed');
+  }
     
 }
 
@@ -355,8 +364,6 @@ class Game {
     logEntry('game.playCard parameters received: cardId = ' + card.uniqueID + ' playerId: ' + playerId);
     const indexOfCard = table.players[playerId].cards.findIndex(element => element == card);
     logEntry('inside game.playCard: ' + indexOfCard + ' player: ' + playerId);
-    //const card = table.players[playerId].cards[indexOfCard];
-    
     table.discardPile.cards.push(card);
     table.players[playerId].cards.splice(indexOfCard, 1);
     
@@ -428,20 +435,21 @@ class Game {
       game.numberOfCardsToDraw += 2;
       return true;
     } else if (indexOfSeven >= 0 && table.currentPlayer.isHuman) {
-      // show modal
+      view.toggleSevenModal();
+      
       return true;
     }
     return false;
   }
 
   setNextPlayer = function() {
-      if (table.currentPlayer < (table.players.length - 1)) {
-        table.currentPlayer++;
-      } else {
-        table.currentPlayer = 0;
-      }
+    if (table.currentPlayer < (table.players.length - 1)) {
+      table.currentPlayer++;
+    } else {
+      table.currentPlayer = 0;
     }
   }
+
 
   performOpponentAction = function(playerId) {
     let cards = table.players[playerId].cards;
