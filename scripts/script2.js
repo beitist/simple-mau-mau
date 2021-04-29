@@ -260,7 +260,6 @@ class View {
         } else {
           game.drawCard(cardCopy, 0);
         }
-        game.play.next();
       }})(card, eventAttachedToHuman));
     }
     
@@ -436,22 +435,30 @@ class Game {
       return true;
     } else if (indexOfSeven >= 0 && table.currentPlayer.isHuman) {
       view.toggleSevenModal();
-      
+
       return true;
     }
     return false;
   }
 
   setNextPlayer = function() {
+    if (game.checkIfWeHaveAWinner) {
+      game.congrats();
+      break;
+    }
     if (table.currentPlayer < (table.players.length - 1)) {
       table.currentPlayer++;
     } else {
       table.currentPlayer = 0;
     }
+    if (!table.players[table.currentPlayer].isHuman) {
+      game.performOpponentAction();
+    }
   }
 
 
-  performOpponentAction = function(playerId) {
+  performOpponentAction = function() {
+    let playerId = table.currentPlayer;
     let cards = table.players[playerId].cards;
     let playableCards = [];
     if (game.responseRequired) {
@@ -477,8 +484,9 @@ class Game {
       logEntry('Found this random index: ' + randomPileIndex);
       game.playCard(playableCards[randomPileIndex], table.currentPlayer);
     }
-      view.updateDeckView;
-      view.updatePlayerView;
+    view.updateDeckView();
+    view.updatePlayerView();
+    game.setNextPlayer();
   }
 
   cardCanBePlayed = function(card) {
@@ -498,6 +506,10 @@ class Game {
 
   checkIfWeHaveAWinner = function() {
     logEntry('Checking winner', 1);
+  }
+
+  congrats = function() {
+    
   }
   
 }
