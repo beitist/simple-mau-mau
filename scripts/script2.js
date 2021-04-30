@@ -400,7 +400,7 @@ class Game {
     if (game.checkIfWeHaveAWinner()) {
       game.congrats();
     }
-    setNextPlayer();
+    game.setNextPlayer();
     game.preMoveConditions();
     if (!table.players[table.currentPlayer].isHuman) {
       game.performOpponentAction();
