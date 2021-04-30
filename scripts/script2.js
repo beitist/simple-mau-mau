@@ -260,6 +260,7 @@ class View {
         } else {
           game.drawCard(cardCopy, 0);
         }
+        game.controlGameFlow();
       }})(card, eventAttachedToHuman));
     }
     
@@ -292,8 +293,9 @@ class Game {
     game.dealInitialCards();
     view.updateDeckView();
     view.updatePlayerView();
-    game.play = game.playGenerator();
-    game.play.next();
+    // Testing to run the game without the generator!
+    // game.play = game.playGenerator();
+    // game.play.next();
   }
   
   createPlayers = function() {
@@ -390,20 +392,24 @@ class Game {
     return table.discardPile.cards[table.discardPile.cards.length - 1];
   }
 
-  playGenerator = function*() {
-    while (!table.hasWinner) {
-      game.preMoveConditions();
-      if (table.players[table.currentPlayer].isHuman) {
-        yield;
-        game.setNextPlayer();
-      } else {
-        game.performOpponentAction(table.currentPlayer);
-        game.setNextPlayer();
-      }
-      game.postMoveConditions();
-      game.checkIfWeHaveAWinner();
-      table.totalNumberOfMoves++;
-      logEntry('Generator, move #' + table.totalNumberOfMoves, 2);
+  controlGameFlow = function() {
+    table.totalNumberOfMoves++;
+    game.postMoveConditions();
+    if (game.checkIfWeHaveAWinner()) {
+      game.congrats();
+    }
+    setNextPlayer();
+    game.preMoveConditions();
+    if (!table.players[table.currentPlayer].isHuman) {
+      game.performOpponentAction();
+    }
+  }
+
+  setNextPlayer = function() {
+    if (table.currentPlayer < (table.players.length - 1)) {
+      table.currentPlayer++;
+    } else {
+      table.currentPlayer = 0;
     }
   }
 
@@ -428,34 +434,22 @@ class Game {
 
   playerWantsToExtendSeven = function() {
     let cards = table.players[table.currentPlayer].cards;
+    let playerId = table.currentPlayer;
     let indexOfSeven = cards.findIndex(card => card.value == 7);
-    if (indexOfSeven >= 0 && !table.currentPlayer.isHuman) {
-      game.playCard(table.players[playerId].cards[indexOfSeven], table.currentPlayer);
+    if (indexOfSeven >= 0 && !table.players[playerId].isHuman) {
+      game.playCard(table.players[playerId].cards[indexOfSeven], playerId);
       game.numberOfCardsToDraw += 2;
       return true;
     } else if (indexOfSeven >= 0 && table.currentPlayer.isHuman) {
       view.toggleSevenModal();
-
       return true;
     }
     return false;
   }
 
-  setNextPlayer = function() {
-    if (game.checkIfWeHaveAWinner) {
-      game.congrats();
-      break;
-    }
-    if (table.currentPlayer < (table.players.length - 1)) {
-      table.currentPlayer++;
-    } else {
-      table.currentPlayer = 0;
-    }
-    if (!table.players[table.currentPlayer].isHuman) {
-      game.performOpponentAction();
-    }
+  postMoveConditions() {
+    return true;
   }
-
 
   performOpponentAction = function() {
     let playerId = table.currentPlayer;
