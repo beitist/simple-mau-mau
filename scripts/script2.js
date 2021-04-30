@@ -8,9 +8,10 @@ const CSS_NOT_DONE_YET = true;
 const PATH_TO_CARD_IMAGES = 'img/png/';
 const BACK_OF_CARD_IMAGE_SRC = 'img/png/red_back.png';
 
-const newGameButton = document.getElementById('button-new-game');
-const undoButton = document.getElementById('button-undo');
-const topTenButton = document.getElementById('button-top-ten');
+const NEW_GAME_BUTTON = document.getElementById('button-new-game');
+const UNDO_BUTTON = document.getElementById('button-undo');
+const TOP_TEN_BUTTON = document.getElementById('button-top-ten');
+const CANT_BUTTON = document.getElementById('button-cant');
 
 const versionElement = document.getElementById('header-version');
 
@@ -253,16 +254,16 @@ class View {
       cardNode.src = BACK_OF_CARD_IMAGE_SRC;
     }
 
-    if (addEvent) {
+    if (addEvent && game.cardCanBePlayed(card)) {
       cardNode.addEventListener('click', (function(cardCopy, eventAttachedToHumanCopy) { return function() {
         if (eventAttachedToHumanCopy) {
           game.playCard(cardCopy, 0);
         } else {
           game.drawCard(cardCopy, 0);
         }
-        game.controlGameFlow();
+        game.nextMove();
       }})(card, eventAttachedToHuman));
-    }
+    } 
     
     return cardNode;
   };
@@ -283,6 +284,7 @@ class Game {
     this.requestedColor = '';
     this.mau = [];
     this.eightHasBeenResolved = true;
+    this.unresolvedPostMoveCondition = false;
   }
 
   newGame = function() {
@@ -392,7 +394,7 @@ class Game {
     return table.discardPile.cards[table.discardPile.cards.length - 1];
   }
 
-  controlGameFlow = function() {
+  nextMove = function() {
     table.totalNumberOfMoves++;
     game.postMoveConditions();
     if (game.checkIfWeHaveAWinner()) {
@@ -447,8 +449,18 @@ class Game {
     return false;
   }
 
+  humanPlaysASeven = function() {
+    sessionStorage
+  }
+
   postMoveConditions() {
-    return true;
+    if (game.unresolvedPostMoveCondition) {
+      // RESOLVE THEN SET FALSE
+      game.unresolvedPostMoveCondition = false;
+      return true;
+    } else {
+      return true;
+    }
   }
 
   performOpponentAction = function() {
@@ -480,7 +492,7 @@ class Game {
     }
     view.updateDeckView();
     view.updatePlayerView();
-    game.setNextPlayer();
+    game.nextMove();
   }
 
   cardCanBePlayed = function(card) {
@@ -513,4 +525,6 @@ let table;
 let view;
 const game = new Game();
 
-newGameButton.addEventListener('click', game.newGame);
+NEW_GAME_BUTTON.addEventListener('click', game.newGame);
+CANT_BUTTON.addEventListener('click', game.nextMove);
+EXTEND_SEVEN_YES.addEventListener('click', game.humanPlaysASeven);
