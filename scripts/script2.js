@@ -8,17 +8,22 @@ const CSS_NOT_DONE_YET = true;
 const PATH_TO_CARD_IMAGES = 'img/png/';
 const BACK_OF_CARD_IMAGE_SRC = 'img/png/red_back.png';
 
-const newGameButton = document.getElementById('button-new-game');
-const undoButton = document.getElementById('button-undo');
-const topTenButton = document.getElementById('button-top-ten');
+const NEW_GAME_BUTTON = document.getElementById('button-new-game');
+const UNDO_BUTTON = document.getElementById('button-undo');
+const TOP_TEN_BUTTON = document.getElementById('button-top-ten');
+const CANT_BUTTON = document.getElementById('button-cant');
 
 const versionElement = document.getElementById('header-version');
 
 const OPPONENTS_NODE = document.getElementById('opponents');
 const HUMAN_NODE = document.getElementById('player');
-
 const DISCARD_PILE_NODE = document.getElementById('discard-pile');
 const DRAW_DECK_NODE = document.getElementById('draw-deck');
+
+const MODAL_OVERLAY = document.getElementById('modal-overlay');
+const EXTEND_SEVEN_MODAL = document.getElementById('extend-seven-modal');
+const EXTEND_SEVEN_YES = document.getElementById('extend-seven-yes');
+const EXTEND_SEVEN_NO = document.getElementById('extend-seven-no');
 
 // totalNumberOfPlayers wird später variabel gesetzt (ab V 1.1)!
 let totalNumberOfPlayers = 3;
@@ -249,19 +254,24 @@ class View {
       cardNode.src = BACK_OF_CARD_IMAGE_SRC;
     }
 
-    if (addEvent) {
+    if (addEvent && game.cardCanBePlayed(card)) {
       cardNode.addEventListener('click', (function(cardCopy, eventAttachedToHumanCopy) { return function() {
         if (eventAttachedToHumanCopy) {
           game.playCard(cardCopy, 0);
         } else {
           game.drawCard(cardCopy, 0);
         }
-        game.play.next();
+        game.nextMove();
       }})(card, eventAttachedToHuman));
-    }
+    } 
     
     return cardNode;
   };
+
+  toggleSevenModal = function() {
+    MODAL_OVERLAY.classList.toggle('closed');
+    EXTEND_SEVEN_MODAL.classList.toggle('closed');
+  }
     
 }
 
@@ -274,6 +284,7 @@ class Game {
     this.requestedColor = '';
     this.mau = [];
     this.eightHasBeenResolved = true;
+    this.unresolvedPostMoveCondition = false;
   }
 
   newGame = function() {
@@ -284,8 +295,9 @@ class Game {
     game.dealInitialCards();
     view.updateDeckView();
     view.updatePlayerView();
-    game.play = game.playGenerator();
-    game.play.next();
+    // Testing to run the game without the generator!
+    // game.play = game.playGenerator();
+    // game.play.next();
   }
   
   createPlayers = function() {
@@ -355,8 +367,6 @@ class Game {
     logEntry('game.playCard parameters received: cardId = ' + card.uniqueID + ' playerId: ' + playerId);
     const indexOfCard = table.players[playerId].cards.findIndex(element => element == card);
     logEntry('inside game.playCard: ' + indexOfCard + ' player: ' + playerId);
-    //const card = table.players[playerId].cards[indexOfCard];
-    
     table.discardPile.cards.push(card);
     table.players[playerId].cards.splice(indexOfCard, 1);
     
@@ -384,20 +394,24 @@ class Game {
     return table.discardPile.cards[table.discardPile.cards.length - 1];
   }
 
-  playGenerator = function*() {
-    while (!table.hasWinner) {
-      game.preMoveConditions();
-      if (table.players[table.currentPlayer].isHuman) {
-        yield;
-        game.setNextPlayer();
-      } else {
-        game.performOpponentAction(table.currentPlayer);
-        game.setNextPlayer();
-      }
-      game.postMoveConditions();
-      game.checkIfWeHaveAWinner();
-      table.totalNumberOfMoves++;
-      logEntry('Generator, move #' + table.totalNumberOfMoves, 2);
+  nextMove = function() {
+    table.totalNumberOfMoves++;
+    game.postMoveConditions();
+    if (game.checkIfWeHaveAWinner()) {
+      game.congrats();
+    }
+    game.setNextPlayer();
+    game.preMoveConditions();
+    if (!table.players[table.currentPlayer].isHuman) {
+      game.performOpponentAction();
+    }
+  }
+
+  setNextPlayer = function() {
+    if (table.currentPlayer < (table.players.length - 1)) {
+      table.currentPlayer++;
+    } else {
+      table.currentPlayer = 0;
     }
   }
 
@@ -422,28 +436,35 @@ class Game {
 
   playerWantsToExtendSeven = function() {
     let cards = table.players[table.currentPlayer].cards;
+    let playerId = table.currentPlayer;
     let indexOfSeven = cards.findIndex(card => card.value == 7);
-    if (indexOfSeven >= 0 && !table.currentPlayer.isHuman) {
-      game.playCard(table.players[playerId].cards[indexOfSeven], table.currentPlayer);
+    if (indexOfSeven >= 0 && !table.players[playerId].isHuman) {
+      game.playCard(table.players[playerId].cards[indexOfSeven], playerId);
       game.numberOfCardsToDraw += 2;
       return true;
     } else if (indexOfSeven >= 0 && table.currentPlayer.isHuman) {
-      // show modal
+      view.toggleSevenModal();
       return true;
     }
     return false;
   }
 
-  setNextPlayer = function() {
-      if (table.currentPlayer < (table.players.length - 1)) {
-        table.currentPlayer++;
-      } else {
-        table.currentPlayer = 0;
-      }
+  humanPlaysASeven = function() {
+    sessionStorage
+  }
+
+  postMoveConditions() {
+    if (game.unresolvedPostMoveCondition) {
+      // RESOLVE THEN SET FALSE
+      game.unresolvedPostMoveCondition = false;
+      return true;
+    } else {
+      return true;
     }
   }
 
-  performOpponentAction = function(playerId) {
+  performOpponentAction = function() {
+    let playerId = table.currentPlayer;
     let cards = table.players[playerId].cards;
     let playableCards = [];
     if (game.responseRequired) {
@@ -469,8 +490,9 @@ class Game {
       logEntry('Found this random index: ' + randomPileIndex);
       game.playCard(playableCards[randomPileIndex], table.currentPlayer);
     }
-      view.updateDeckView;
-      view.updatePlayerView;
+    view.updateDeckView();
+    view.updatePlayerView();
+    game.nextMove();
   }
 
   cardCanBePlayed = function(card) {
@@ -491,6 +513,10 @@ class Game {
   checkIfWeHaveAWinner = function() {
     logEntry('Checking winner', 1);
   }
+
+  congrats = function() {
+    
+  }
   
 }
 
@@ -499,4 +525,6 @@ let table;
 let view;
 const game = new Game();
 
-newGameButton.addEventListener('click', game.newGame);
+NEW_GAME_BUTTON.addEventListener('click', game.newGame);
+CANT_BUTTON.addEventListener('click', game.nextMove);
+EXTEND_SEVEN_YES.addEventListener('click', game.humanPlaysASeven);
